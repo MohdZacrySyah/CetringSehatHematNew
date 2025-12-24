@@ -1,6 +1,10 @@
-<x-admin-layout>
-    <x-slot name="header">Tambah Menu Baru</x-slot>
+@extends('layouts.admin')
 
+@section('header')
+    Tambah Menu Baru
+@endsection
+
+@section('content')
     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 max-w-2xl mx-auto">
         <form action="{{ route('admin.menus.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
@@ -40,4 +44,4 @@
             </button>
         </form>
     </div>
-</x-admin-layout>
+@endsection

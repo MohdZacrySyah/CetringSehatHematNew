@@ -258,13 +258,14 @@
     <div id="singleResultArea"></div>
 </div>
 
-{{-- GRID PAKET HEMAT SEHAT (hanya muncul saat dipanggil JS) --}}
+{{-- GRID PAKET HEMAT SEHAT --}}
 <div id="paketHematWrapper" style="display:none;">
     <h3>Paket Makanan Sehat Mu!</h3>
     <div class="paket-grid">
         @foreach(($paketHemat ?? collect()) as $menu)
             <div class="paket-card">
-                <img src="{{ asset($menu->image) }}" alt="{{ $menu->name }}">
+                {{-- PERBAIKAN 1: Tambahkan storage/ pada src gambar --}}
+                <img src="{{ asset('storage/' . $menu->image) }}" alt="{{ $menu->name }}">
                 <div class="paket-info">
                     <h6>{{ $menu->name }}</h6>
                     <p>Rp. {{ number_format($menu->price, 0, ',', '.') }}</p>
@@ -273,7 +274,8 @@
                         <input type="hidden" name="id" value="{{ $menu->id }}">
                         <input type="hidden" name="name" value="{{ $menu->name }}">
                         <input type="hidden" name="price" value="{{ $menu->price }}">
-                        <input type="hidden" name="image" value="{{ asset($menu->image) }}">
+                        {{-- PERBAIKAN 2: Tambahkan storage/ pada input hidden image --}}
+                        <input type="hidden" name="image" value="{{ asset('storage/' . $menu->image) }}">
                         <button type="submit">Tambah</button>
                     </form>
                 </div>
@@ -282,15 +284,19 @@
     </div>
 </div>
 
-{{-- LIST MENU NORMAL (tampil default di home) --}}
+{{-- LIST MENU NORMAL --}}
 <div class="menu-list-area" id="menuListNormal">
     @foreach($menus as $menu)
+    {{-- PERBAIKAN 3: Tambahkan storage/ pada data-image agar JS Search juga benar --}}
     <div class="menu-card"
          data-id="{{ $menu->id }}"
          data-name="{{ $menu->name }}"
          data-price="{{ $menu->price }}"
-         data-image="{{ asset($menu->image) }}">
-        <img class="menu-thumb" src="{{ asset($menu->image) }}" alt="{{ $menu->name }}">
+         data-image="{{ asset('storage/' . $menu->image) }}">
+         
+        {{-- PERBAIKAN 4: Tambahkan storage/ pada src gambar --}}
+        <img class="menu-thumb" src="{{ asset('storage/' . $menu->image) }}" alt="{{ $menu->name }}">
+        
         <div class="menu-info">
             <div class="menu-title">{{ $menu->name }}</div>
             <div class="menu-price">RP. {{ number_format($menu->price, 0, ',', '.') }}</div>
@@ -301,7 +307,8 @@
                 <input type="hidden" name="id" value="{{ $menu->id }}">
                 <input type="hidden" name="name" value="{{ $menu->name }}">
                 <input type="hidden" name="price" value="{{ $menu->price }}">
-                <input type="hidden" name="image" value="{{ asset($menu->image) }}">
+                {{-- PERBAIKAN 5: Tambahkan storage/ pada input hidden image --}}
+                <input type="hidden" name="image" value="{{ asset('storage/' . $menu->image) }}">
                 <button type="submit">Tambah</button>
             </form>
         </div>

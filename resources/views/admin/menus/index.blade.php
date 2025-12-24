@@ -1,6 +1,10 @@
-<x-admin-layout>
-    <x-slot name="header">Daftar Menu Katering</x-slot>
+@extends('layouts.admin')
 
+@section('header')
+    Daftar Menu Katering
+@endsection
+
+@section('content')
     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
         <div class="flex justify-between mb-4">
             <h3 class="text-lg font-bold">Semua Menu</h3>
@@ -39,15 +43,21 @@
                     <td class="border p-2">Rp {{ number_format($menu->price, 0, ',', '.') }}</td>
                     <td class="border p-2">{{ $menu->category }}</td>
                     <td class="border p-2 text-center">
-                        <form action="{{ route('admin.menus.destroy', $menu->id) }}" method="POST" onsubmit="return confirm('Yakin hapus menu ini?');">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="text-red-600 hover:text-red-800">Hapus</button>
-                        </form>
+                        <div class="flex justify-center gap-4">
+                            <a href="{{ route('admin.menus.edit', $menu->id) }}" class="text-yellow-600 hover:text-yellow-800 font-bold">
+                                Edit
+                            </a>
+
+                            <form action="{{ route('admin.menus.destroy', $menu->id) }}" method="POST" onsubmit="return confirm('Yakin hapus menu ini?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-red-600 hover:text-red-800 font-bold">Hapus</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
     </div>
-</x-admin-layout>
+@endsection

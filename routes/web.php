@@ -16,7 +16,11 @@ use App\Http\Controllers\AdminController;
 // Grup Rute Khusus Admin
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
-    
+    // TAMBAHKAN INI:
+    Route::get('/admin/orders', [AdminController::class, 'orders'])->name('admin.orders');
+    // Rute Detail & Update Order
+    Route::get('/admin/orders/{order}', [AdminController::class, 'showOrder'])->name('admin.orders.show');
+    Route::put('/admin/orders/{order}/update', [AdminController::class, 'updateOrderStatus'])->name('admin.orders.update');
 Route::get('/admin/menus', [AdminController::class, 'menus'])->name('admin.menus');
 Route::get('/admin/menus/create', [AdminController::class, 'createMenu'])->name('admin.menus.create');
 Route::post('/admin/menus', [AdminController::class, 'storeMenu'])->name('admin.menus.store');

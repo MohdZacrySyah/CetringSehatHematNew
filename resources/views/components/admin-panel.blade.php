@@ -15,7 +15,7 @@
 <body class="font-sans antialiased bg-gray-100">
     <div class="min-h-screen flex">
         
-        <aside class="w-64 bg-white border-r border-gray-200">
+        <aside class="w-64 bg-white border-r border-gray-200 hidden md:block">
             <div class="h-full flex flex-col">
                 <div class="h-16 flex items-center justify-center border-b border-gray-200">
                     <span class="text-xl font-bold text-gray-800">Admin Panel</span>
@@ -29,13 +29,13 @@
                         Dashboard
                     </a>
 
-                    <a href="{{ route('admin.orders') }}" class="flex items-center px-4 py-2 text-gray-600 rounded-lg hover:bg-gray-100 {{ request()->routeIs('admin.orders') ? 'bg-gray-200 text-gray-900 font-bold' : '' }}">
-    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-    Kelola Pesanan
-</a>
+                    <a href="#" class="flex items-center px-4 py-2 text-gray-600 rounded-lg hover:bg-gray-100">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        Kelola Pesanan
+                    </a>
 
-                    <a href="{{ route('admin.menus') }}" 
-                       class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('admin.menus*') ? 'bg-gray-200 text-gray-900 font-bold' : 'text-gray-600 hover:bg-gray-100' }}">
+                     <a href="{{ route('admin.menus') }}" 
+                        class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('admin.menus*') ? 'bg-gray-200 text-gray-900 font-bold' : 'text-gray-600 hover:bg-gray-100' }}">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
                         Daftar Menu
                     </a>
@@ -57,7 +57,7 @@
         <main class="flex-1 overflow-y-auto">
             <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6 sticky top-0 z-10">
                 <div class="font-semibold text-xl text-gray-800">
-                    @yield('header', 'Dashboard')
+                    {{ $header ?? 'Dashboard' }}
                 </div>
                 <div class="flex items-center">
                     <span class="text-sm text-gray-600 mr-2">Halo, {{ Auth::user()->name }}</span>
@@ -72,7 +72,7 @@
             </header>
 
             <div class="p-6">
-                @yield('content')
+                {{ $slot }}
             </div>
         </main>
     </div>
