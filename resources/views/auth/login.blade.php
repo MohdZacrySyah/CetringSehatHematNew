@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Catering</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
         body, html {
             height: 100%;
@@ -11,7 +12,6 @@
             font-family: Arial, sans-serif;
             overflow: hidden;
             color: #333;
-            /* Latar belakang hijau dari gambar */
             background: #879b55; 
         }
         .container {
@@ -30,7 +30,7 @@
             margin-bottom: 20px;
         }
         .auth-box {
-            background: rgba(230, 230, 210, 0.7); /* Latar belakang kotak transparan */
+            background: rgba(230, 230, 210, 0.7);
             padding: 30px 40px;
             border-radius: 20px;
             width: 100%;
@@ -46,13 +46,32 @@
             margin-bottom: 5px;
             font-size: 0.9rem;
         }
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
         .input-field {
             width: 100%;
             padding: 12px 15px;
             border: none;
             border-radius: 10px;
             box-sizing: border-box;
-            background: #e6e6d1; /* Warna input dari gambar */
+            background: #e6e6d1;
+        }
+        .input-field.with-icon {
+            padding-right: 45px;
+        }
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            cursor: pointer;
+            color: #4A572A;
+            font-size: 1.2rem;
+            user-select: none;
+        }
+        .toggle-password:hover {
+            color: #2d3518;
         }
         .login-button {
             width: 100%;
@@ -66,6 +85,9 @@
             cursor: pointer;
             margin-top: 10px;
         }
+        .login-button:hover {
+            background-color: #3a4521;
+        }
         .auth-links {
             text-align: center;
             margin-top: 15px;
@@ -75,6 +97,9 @@
             color: #4A572A;
             font-weight: bold;
             text-decoration: none;
+        }
+        .auth-links a:hover {
+            text-decoration: underline;
         }
         .forgot-password {
             text-align: right;
@@ -86,7 +111,9 @@
             color: #4A572A;
             text-decoration: none;
         }
-        /* Ini untuk pesan error (Gambar image_34fda0.png) */
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
         .error-message {
             background-color: #f8d7da;
             color: #721c24;
@@ -137,8 +164,12 @@
 
                 <div class="input-group">
                     <label for="password">Password</label>
-                    <input id="password" type="password" name="password" 
-                           class="input-field" placeholder="masukkan password anda" required>
+                    <div class="input-wrapper">
+                        <input id="password" type="password" name="password" 
+                               class="input-field with-icon" 
+                               placeholder="masukkan password anda" required>
+                        <i class="fa-solid fa-eye toggle-password" id="togglePassword"></i>
+                    </div>
                 </div>
 
                 <div class="forgot-password">
@@ -159,5 +190,20 @@
             </form>
         </div>
     </div>
+
+    <script>
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordField = document.getElementById('password');
+
+        togglePassword.addEventListener('click', function() {
+            // Toggle tipe input
+            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordField.setAttribute('type', type);
+            
+            // Toggle icon mata
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+    </script>
 </body>
 </html>

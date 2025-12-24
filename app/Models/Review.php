@@ -4,40 +4,27 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
 
 class Review extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'customer_name',
-        'menu_name',
+        'user_id',
+        'order_id',
+        'question',
+        'review_text',
+        'media_path',
         'rating',
-        'review',
-        'reviewed_at',
     ];
 
-    protected $casts = [
-        'rating' => 'integer',
-        'reviewed_at' => 'datetime',
-    ];
-
-    // Ambil semua review terbaru
-    public function scopeLatest($query)
+    public function user()
     {
-        return $query->orderBy('reviewed_at', 'desc');
+        return $this->belongsTo(User::class);
     }
 
-    // Hitung rata-rata rating
-    public static function averageRating()
+    public function order()
     {
-        return self::avg('rating');
-    }
-
-    // Total review
-    public static function totalReviews()
-    {
-        return self::count();
+        return $this->belongsTo(Order::class);
     }
 }

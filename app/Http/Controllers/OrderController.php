@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
-    // Halaman struktur pembayaran (dari cart)
-    public function struktur()
+    // Halaman pilih metode pembayaran (langsung dari cart)
+    public function paymentMethod()
     {
         $user = Auth::user();
         $carts = Cart::where('user_id', $user->id)->with('menu')->get();
@@ -25,16 +25,20 @@ class OrderController extends Controller
             return $cart->menu->price * $cart->quantity;
         });
 
-        $biayaPengiriman = 0; // Gratis atau sesuaikan
+        $biayaPengiriman = 1000;
         $biayaAplikasi = 1000;
         $totalBayar = $subtotal + $biayaPengiriman + $biayaAplikasi;
 
-        return view('order.struktur', compact('carts', 'user', 'subtotal', 'biayaPengiriman', 'biayaAplikasi', 'totalBayar'));
+        return view('order.payment-method', compact('carts', 'subtotal', 'biayaPengiriman', 'biayaAplikasi', 'totalBayar'));
     }
 
-    // Proses checkout - create order
-    public function checkout(Request $request)
+    // Proses pilih metode pembayaran & create order
+    public function selectPaymentMethod(Request $request)
     {
+        $request->validate([
+            'payment_method' => 'required|in:dana,gopay,linkaja,ovo,qris,cod',
+        ]);
+
         $user = Auth::user();
         $carts = Cart::where('user_id', $user->id)->with('menu')->get();
 
@@ -48,7 +52,7 @@ class OrderController extends Controller
                 return $cart->menu->price * $cart->quantity;
             });
 
-            $biayaPengiriman = 0;
+            $biayaPengiriman = 1000;
             $biayaAplikasi = 1000;
             $totalBayar = $subtotal + $biayaPengiriman + $biayaAplikasi;
 
@@ -60,15 +64,18 @@ class OrderController extends Controller
                 'biaya_pengiriman' => $biayaPengiriman,
                 'biaya_aplikasi' => $biayaAplikasi,
                 'total_bayar' => $totalBayar,
+                'payment_method' => $request->payment_method,
+                'custom_note' => $request->custom_note,
                 'status' => 'pending',
             ]);
 
-            // Create order items
+            // Create order items dengan menyimpan gambar
             foreach ($carts as $cart) {
                 OrderItem::create([
                     'order_id' => $order->id,
                     'menu_id' => $cart->menu_id,
                     'menu_name' => $cart->menu->name,
+                    'menu_image' => $cart->menu->image, // SIMPAN GAMBAR
                     'price' => $cart->menu->price,
                     'quantity' => $cart->quantity,
                     'subtotal' => $cart->menu->price * $cart->quantity,
@@ -80,16 +87,16 @@ class OrderController extends Controller
 
             DB::commit();
 
-            // Redirect ke halaman pilih metode pembayaran
-            return redirect()->route('order.payment.method', $order->id);
+            // Redirect ke halaman detail pembayaran
+            return redirect()->route('order.payment.detail', $order->id);
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Gagal membuat pesanan: ' . $e->getMessage());
         }
     }
 
-    // Halaman pilih metode pembayaran
-    public function paymentMethod($orderId)
+    // Halaman detail pembayaran (penerima & nomor)
+    public function paymentDetail($orderId)
     {
         $order = Order::with('items')->findOrFail($orderId);
         
@@ -97,32 +104,11 @@ class OrderController extends Controller
             abort(403);
         }
 
-        return view('order.payment-method', compact('order'));
+        return view('order.payment-detail', compact('order'));
     }
 
-    // Proses pilih metode pembayaran
-    public function selectPaymentMethod(Request $request, $orderId)
-    {
-        $request->validate([
-            'payment_method' => 'required|in:dana,gopay,linkaja,ovo,qris',
-        ]);
-
-        $order = Order::findOrFail($orderId);
-        
-        if ($order->user_id !== Auth::id()) {
-            abort(403);
-        }
-
-        $order->update([
-            'payment_method' => $request->payment_method,
-        ]);
-
-        // Redirect ke halaman pembayaran sesuai metode
-        return redirect()->route('order.payment.show', $order->id);
-    }
-
-    // Halaman pembayaran (tampilkan QR/detail)
-    public function showPayment($orderId)
+    // Halaman QR Code
+    public function showQRCode($orderId)
     {
         $order = Order::with('items')->findOrFail($orderId);
         
@@ -130,11 +116,11 @@ class OrderController extends Controller
             abort(403);
         }
 
-        return view('order.payment-show', compact('order'));
+        return view('order.payment-qr', compact('order'));
     }
 
-    // Konfirmasi pembayaran
-    public function confirmPayment($orderId)
+    // Halaman loading
+    public function loading($orderId)
     {
         $order = Order::findOrFail($orderId);
         
@@ -142,12 +128,13 @@ class OrderController extends Controller
             abort(403);
         }
 
+        // Update status order menjadi paid
         $order->update([
             'status' => 'paid',
             'paid_at' => now(),
         ]);
 
-        return redirect()->route('order.success', $order->id)->with('success', 'Pembayaran berhasil!');
+        return view('order.loading', compact('order'));
     }
 
     // Halaman sukses
@@ -160,5 +147,17 @@ class OrderController extends Controller
         }
 
         return view('order.success', compact('order'));
+    }
+
+    // Halaman detail pesanan
+    public function detail($orderId)
+    {
+        $order = Order::with('items')->findOrFail($orderId);
+        
+        if ($order->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        return view('order.detail', compact('order'));
     }
 }

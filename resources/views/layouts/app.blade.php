@@ -39,6 +39,7 @@
             display: flex;
             flex-direction: column;
             padding-top: 20px;
+            overflow-y: auto;
         }
         .sidebar.open {
             left: 0;
@@ -84,6 +85,8 @@
         .sidebar-btn.logout {
             background: #fbe7e7;
             color: #ab3d36;
+            margin-top: auto;
+            margin-bottom: 20px;
         }
         .sidebar-btn.logout:hover {
             background: #f5d0d0;
@@ -247,10 +250,9 @@
         <a href="{{ route('arsip.index') }}" class="sidebar-btn {{ request()->is('arsip-pesanan*') ? 'active' : '' }}">
             Arsip Pesanan
         </a>
-       <a href="{{ route('rating') }}" class="sidebar-btn {{ request()->is('rating') ? 'active' : '' }}">
-    Rating
-</a>
-
+        <a href="{{ route('ratings.index') }}" class="sidebar-btn {{ request()->is('ratings') ? 'active' : '' }}">
+            Rating
+        </a>
         
         <button type="button" class="sidebar-btn logout" onclick="showLogoutModal()">
             Logout

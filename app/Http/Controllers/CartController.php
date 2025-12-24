@@ -82,4 +82,29 @@ class CartController extends Controller
         
         return redirect()->route('cart')->with('success', 'Keranjang berhasil dikosongkan!');
     }
+    public function checkout()
+    {
+        $carts = auth()->user()->carts;
+
+        $order = Order::create([
+            'order_number' => 'ORD-' . time(),
+            'user_id' => auth()->id(),
+            'subtotal' => $carts->sum(fn($c) => $c->price * $c->quantity),
+            'total_bayar' => $carts->sum(fn($c) => $c->price * $c->quantity) + 1000,
+            'status' => 'pending'
+        ]);
+
+        foreach ($carts as $cart) {
+            $order->items()->create([
+                'menu_id' => $cart->menu_id,
+                'menu_name' => $cart->name,
+                'price' => $cart->price,
+                'quantity' => $cart->quantity,
+                'subtotal' => $cart->price * $cart->quantity,
+            ]);
+        }
+
+        return redirect()->route('orders.pay', $order->id);
+    }
+
 }

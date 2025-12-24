@@ -273,36 +273,10 @@
         </div>
     </div>
 
-    {{-- BUTTON LOGOUT --}}
-    <div class="logout-section">
-        <button type="button" class="logout-button" onclick="showLogoutModal()">
-            <i class="fa-solid fa-right-from-bracket"></i>
-            Logout
-        </button>
-    </div>
+   
 </div>
 
-{{-- MODAL KONFIRMASI LOGOUT --}}
-<div id="logoutModal" class="logout-modal">
-    <div class="logout-modal-content">
-        <div class="logout-modal-icon">
-            <i class="fa-solid fa-right-from-bracket"></i>
-        </div>
-        <h3 class="logout-modal-title">Konfirmasi Logout</h3>
-        <p class="logout-modal-text">Apakah Anda yakin ingin keluar dari akun?</p>
-        <div class="logout-modal-buttons">
-            <button type="button" class="logout-modal-btn logout-modal-btn-cancel" onclick="hideLogoutModal()">
-                Batal
-            </button>
-            <form method="POST" action="{{ route('logout') }}" style="display:inline;">
-                @csrf
-                <button type="submit" class="logout-modal-btn logout-modal-btn-confirm">
-                    Ya, Logout
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
+
 
 @push('scripts')
 <script>

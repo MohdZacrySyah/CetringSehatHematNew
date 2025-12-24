@@ -18,9 +18,14 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
+    'name',
+    'email',
+    'role',      // Tambahkan ini
+    'alamat',    // Tambahkan ini (sesuai migrasi profil Anda)
+    'telp',      // Tambahkan ini (sesuai migrasi profil Anda)
+    'avatar',    // Tambahkan ini (sesuai migrasi profil Anda)
+    'password',
+
     ];
 
     /**

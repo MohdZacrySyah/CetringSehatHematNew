@@ -32,15 +32,45 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Relasi ke order items
+    // Relasi ke order items (nama asli)
     public function items()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    // Relasi ke order items (alias untuk compatibility)
+    public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
+
+    // Relasi ke review
+    public function review()
+    {
+        return $this->hasOne(Review::class);
+    }
+
+    // Relasi ke reviews (plural untuk multiple reviews jika diperlukan)
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
     }
 
     // Generate order number otomatis
     public static function generateOrderNumber()
     {
         return 'ORD' . date('Ymd') . rand(1000, 9999);
+    }
+
+    // Helper method: Cek apakah order sudah di-review
+    public function hasReview()
+    {
+        return $this->review()->exists();
+    }
+
+    // Helper method: Get total items
+    public function getTotalItemsAttribute()
+    {
+        return $this->items->sum('quantity');
     }
 }

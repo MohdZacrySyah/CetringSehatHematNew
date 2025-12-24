@@ -9,30 +9,40 @@ return new class extends Migration
     public function up()
     {
         Schema::create('orders', function (Blueprint $table) {
-            $table->id();
-            $table->string('order_number')->unique();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->integer('subtotal');
-            $table->integer('biaya_pengiriman')->default(0);
-            $table->integer('biaya_aplikasi')->default(1000);
-            $table->integer('total_bayar');
-            $table->string('payment_method')->nullable(); // dana, gopay, linkaja, ovo, qris
-            $table->enum('status', ['pending', 'paid', 'processing', 'completed', 'cancelled'])->default('pending');
-            $table->text('customer_notes')->nullable();
-            $table->timestamp('paid_at')->nullable();
-            $table->timestamps();
-        });
+        $table->id();
+        $table->string('order_number')->unique();
+        $table->foreignId('user_id')->constrained()->onDelete('cascade');
 
-        Schema::create('order_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('order_id')->constrained()->onDelete('cascade');
-            $table->foreignId('menu_id')->constrained()->onDelete('cascade');
-            $table->string('menu_name');
-            $table->integer('price');
-            $table->integer('quantity');
-            $table->integer('subtotal');
-            $table->timestamps();
-        });
+        // harga
+        $table->integer('subtotal');
+        $table->integer('biaya_pengiriman')->default(0);
+        $table->integer('biaya_aplikasi')->default(1000);
+        $table->integer('total_bayar');
+
+        // MIDTRANS
+        $table->string('payment_method')->nullable(); // gopay, qris, va, cc
+        $table->string('midtrans_transaction_id')->nullable();
+        $table->string('midtrans_order_id')->nullable();
+        $table->json('payment_response')->nullable();
+
+        // STATUS
+        $table->enum('status', [
+            'pending',      // baru checkout
+            'paid',         // settlement
+            'processing',   // catering diproses
+            'completed',    // selesai
+            'cancelled'     // batal / expire
+        ])->default('pending');
+
+        // CATERING
+        $table->date('start_date')->nullable();
+        $table->integer('duration_days')->nullable();
+
+        // lainnya
+        $table->text('customer_notes')->nullable();
+        $table->timestamp('paid_at')->nullable();
+        $table->timestamps();
+    });
     }
 
     public function down()
