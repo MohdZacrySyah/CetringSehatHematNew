@@ -171,14 +171,16 @@
         text-decoration: none;
         display: block;
         text-align: center;
+        transition: opacity 0.3s;
     }
     .checkout-button:hover {
         background-color: #4A572A;
     }
-    .checkout-button:disabled {
+    .checkout-button.disabled {
         background: #9faf82;
         cursor: not-allowed;
         pointer-events: none;
+        opacity: 0.5;
     }
     .empty-text {
         text-align: center;
@@ -195,13 +197,19 @@
 </div>
 
 <div class="cart-list-container">
+    {{-- MENAMPILKAN PESAN ERROR JIKA CHECKOUT GAGAL --}}
+    @if(session('error'))
+        <div style="background-color: #fee2e2; border: 1px solid #ef4444; color: #b91c1c; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;">
+            {{ session('error') }}
+        </div>
+    @endif
+
     @if($carts->isEmpty())
         <div class="empty-text">
             Keranjang Anda masih kosong.
         </div>
     @else
         @foreach($carts as $cart)
-            
         <div class="cart-item" data-price="{{ $cart->price }}">
             <label class="checkbox-container">
                 <div class="custom-checkbox">
@@ -209,8 +217,7 @@
                     <span class="checkmark"></span>
                 </div>
             </label>
-            <img src="{{ asset($cart->image) }}" alt="{{ $cart->name }}"> <!-- Gambar -->
-            <div class="item-details">
+            <img src="{{ asset($cart->image) }}" alt="{{ $cart->name }}"> <div class="item-details">
                 <h3>{{ $cart->name }}</h3>
                 <p>Rp {{ number_format($cart->price, 0, ',', '.') }}</p>
             </div>
@@ -239,13 +246,12 @@
         <span id="total-price">Rp 0</span>
     </div>
     
-   <form action="{{ route('order.checkout') }}" method="POST">
-    @csrf
-    <button type="submit" class="checkout-button" id="checkoutBtn">
-        Beli Sekarang
-    </button>
-</form>
-
+    <form action="{{ route('order.checkout') }}" method="POST">
+        @csrf
+        <button type="submit" class="checkout-button" id="checkoutBtn">
+            Beli Sekarang
+        </button>
+    </form>
 </div>
 @endsection
 
@@ -274,18 +280,23 @@
         if (hasChecked && total > 0) {
             checkoutBtn.classList.remove('disabled');
             checkoutBtn.style.pointerEvents = 'auto';
+            checkoutBtn.style.opacity = '1';
         } else {
             checkoutBtn.classList.add('disabled');
             checkoutBtn.style.pointerEvents = 'none';
+            checkoutBtn.style.opacity = '0.5';
         }
     }
     
     document.addEventListener('DOMContentLoaded', function() {
-        calculateTotal();
-        
+        // OTOMATIS CENTANG SEMUA CHECKBOX SAAT HALAMAN DIBUKA
         document.querySelectorAll('input[type="checkbox"]').forEach(function(cb){
+            cb.checked = true;
             cb.addEventListener('change', calculateTotal);
         });
+        
+        // Hitung total langsung agar tombol "Beli Sekarang" menyala
+        calculateTotal(); 
     });
 </script>
 @endpush

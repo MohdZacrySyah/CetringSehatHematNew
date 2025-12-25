@@ -32,11 +32,13 @@ class Cart extends Model
     }
 
     // Relasi ke Menu
-    public function menu()
+   public function menu()
     {
-        return $this->belongsTo(Menu::class);
+        return $this->belongsTo(Menu::class, 'menu_id', 'id');
     }
 
+
+    
     // Hitung total semua item di cart
     public function scopeTotal($query, $userId = null)
     {

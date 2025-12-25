@@ -228,46 +228,31 @@
     <a href="{{ route('dashboard') }}" class="back-btn">
         <i class="fa-solid fa-arrow-left"></i>
     </a>
-    <span class="header-title">detail pesanan</span>
+    <span class="header-title">Detail Pesanan</span>
 </div>
 
 <div class="detail-container">
-    <!-- Status Card -->
     <div class="status-card">
+       
         <div class="status-row">
-            <span class="status-label">status pemesanan</span>
-            <span class="status-value 
-                @if($order->status === 'delivered') status-delivered
-                @elseif($order->status === 'processing') status-processing
-                @else status-pending
-                @endif">
-                @if($order->status === 'delivered')
-                    Pesanan Selesai
-                @elseif($order->status === 'processing')
-                    Pesanan Diproses
-                @else
-                    Pesanan Pending
-                @endif
-            </span>
-        </div>
-        <div class="status-row">
-            <span class="status-label">Status pembayaran</span>
+            <span class="status-label">Status Pembayaran</span>
             <span class="status-value" style="color: #28a745;">
-                @if($order->payment_status === 'paid')
+                {{-- Kita cek status utama: Kalau bukan pending & bukan cancelled, berarti sudah bayar --}}
+                @if($order->status != 'pending' && $order->status != 'cancelled')
                     Sudah Dibayar
                 @else
                     Menunggu Dibayar
                 @endif
             </span>
         </div>
+        
         <div class="status-row">
-            <span class="status-label">Tanggal pemesanan</span>
+            <span class="status-label">Tanggal Pemesanan</span>
             <span class="status-value">{{ $order->created_at->format('d M Y, H:i') }} WIB</span>
         </div>
     </div>
 
-    <!-- Detail Produk -->
-    <div class="section-title">Detail produk</div>
+    <div class="section-title">Detail Produk</div>
     <div class="product-card">
         @foreach($order->items as $item)
         <div class="product-item">
@@ -284,69 +269,60 @@
             <div class="product-info">
                 <div class="product-name">{{ $item->menu_name }}</div>
                 <div class="product-price">Rp {{ number_format($item->price, 0, ',', '.') }}</div>
-                <div class="product-qty">jumlah {{ $item->quantity }}</div>
+                <div class="product-qty">Jumlah: {{ $item->quantity }}</div>
             </div>
         </div>
         @endforeach
     </div>
 
-    <!-- Catatan Custom -->
     @if($order->custom_note)
     <div class="custom-note">
-        <div class="note-title">catatan custom</div>
+        <div class="note-title">Catatan Custom</div>
         <div class="note-content">{{ $order->custom_note }}</div>
     </div>
     @endif
 
-    <!-- Rincian Pembayaran -->
-    <div class="section-title">Rincian pembayaran</div>
+    <div class="section-title">Rincian Pembayaran</div>
     <div class="payment-summary">
         <div class="summary-row">
-            <span class="summary-label">metode pembayaran</span>
+            <span class="summary-label">Metode Pembayaran</span>
             <span class="summary-value">
-                @if($order->payment_method == 'cod')
-                    COD
-                @elseif($order->payment_method == 'qris')
-                    QRIS
-                @elseif($order->payment_method == 'transfer')
-                    Transfer Bank
+                @if($order->payment_method)
+                    {{ strtoupper(str_replace('_', ' ', $order->payment_method)) }}
                 @else
-                    {{ strtoupper($order->payment_method) }}
+                    -
                 @endif
             </span>
         </div>
         <div class="summary-row">
-            <span class="summary-label">subtotal harga</span>
-            <span class="summary-value">Rp {{ number_format($order->subtotal ?? $order->total_price, 0, ',', '.') }}</span>
+            <span class="summary-label">Subtotal Harga</span>
+            <span class="summary-value">Rp {{ number_format($order->subtotal ?? 0, 0, ',', '.') }}</span>
         </div>
         <div class="summary-row">
-            <span class="summary-label">biaya jasa aplikasi</span>
+            <span class="summary-label">Biaya Jasa Aplikasi</span>
             <span class="summary-value">Rp {{ number_format($order->biaya_aplikasi ?? 0, 0, ',', '.') }}</span>
         </div>
         <div class="summary-row">
-            <span class="summary-label">biaya layanan</span>
+            <span class="summary-label">Biaya Layanan/Kirim</span>
             <span class="summary-value">Rp {{ number_format($order->biaya_pengiriman ?? 0, 0, ',', '.') }}</span>
         </div>
         <div class="summary-row summary-total">
             <span class="summary-label">Total Bayar</span>
-            <span class="summary-value">Rp {{ number_format($order->total_bayar ?? $order->total_price, 0, ',', '.') }}</span>
+            <span class="summary-value">Rp {{ number_format($order->total_bayar ?? 0, 0, ',', '.') }}</span>
         </div>
     </div>
 
-    <!-- Action Buttons -->
     <div class="action-buttons">
-        <!-- Action Buttons -->
-<div class="action-buttons">
-    <!-- Button Beri Ulasan - Muncul untuk semua status -->
-    <a href="{{ route('review.create', $order->id) }}" class="btn-review">
-        <i class="fa-solid fa-star"></i> Beri Ulasan
-    </a>
-
-    <!-- Button Pesan Lagi -->
-    <a href="{{ route('dashboard') }}" class="btn-secondary">
-        <i class="fa-solid fa-cart-shopping"></i> Pesan Lagi
-    </a>
-</div>
+        @if($order->status === 'completed' || $order->status === 'delivered')
+        <a href="{{ route('review.create', $order->id) }}" class="btn-review">
+            <i class="fa-solid fa-star"></i> Beri Ulasan
+        </a>
+        @endif
+        
+        <a href="{{ route('dashboard') }}" class="btn-secondary">
+            <i class="fa-solid fa-cart-shopping"></i> Pesan Lagi
+        </a>
+    </div>
 
 </div>
 @endsection

@@ -32,10 +32,10 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Relasi ke order items (nama asli)
+    // RELASI PENTING: Order punya banyak Item
     public function items()
     {
-        return $this->hasMany(OrderItem::class);
+        return $this->hasMany(OrderItem::class, 'order_id', 'id');
     }
 
     // Relasi ke order items (alias untuk compatibility)
