@@ -35,7 +35,7 @@
     </div>
     @endif
 
-    {{-- 2. ALERT ERROR SYSTEM (Database/Exception) --}}
+    {{-- 2. ALERT ERROR SYSTEM --}}
     @if (session('error'))
     <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6">
         <strong class="font-bold">Error:</strong> {{ session('error') }}
@@ -53,7 +53,7 @@
         </div>
     </div>
 
-    {{-- Tambahkan onsubmit untuk loading state --}}
+    {{-- Form Checkout --}}
     <form action="{{ route('order.process') }}" method="POST" id="checkout-form" class="grid grid-cols-1 lg:grid-cols-12 gap-8" onsubmit="return handleFormSubmit()">
         @csrf
         
@@ -122,10 +122,8 @@
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    
                      {{-- PILIHAN 1: TRANSFER BANK --}}
                      <label class="relative cursor-pointer group">
-                        {{-- PERBAIKAN: Tambahkan 'checked' agar default terpilih --}}
                         <input type="radio" name="payment_method" value="va" class="peer sr-only payment-radio" checked>
                         <div class="p-4 rounded-xl border border-gray-200 hover:border-[#556B2F] transition-all flex items-center gap-4 group-hover:bg-[#f5f7ee]/50 bg-white h-full">
                             <div class="w-10 h-10 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
@@ -158,7 +156,7 @@
 
         </div>
 
-        {{-- RINGKASAN ORDER (Sidebar Kanan) --}}
+        {{-- RINGKASAN ORDER --}}
         <div class="lg:col-span-5">
             <div class="bg-white p-6 rounded-2xl shadow-xl border border-[#c2d5a0]/40 sticky top-8">
                 <div class="flex justify-between items-center mb-6">
@@ -171,10 +169,10 @@
                     <div class="flex gap-4 items-start pb-4 border-b border-dashed border-gray-100 last:border-0 last:pb-0">
                         <div class="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 shadow-sm">
                              @php
-                                // Perbaikan Gambar Makanan
+                                // Menggunakan str_starts_with (PHP 8 native) agar lebih aman
                                 $imgSrc = 'https://via.placeholder.com/150?text=No+Image';
                                 if($cart->menu->image) {
-                                    if(Str::startsWith($cart->menu->image, 'http')) {
+                                    if(str_starts_with($cart->menu->image, 'http')) {
                                         $imgSrc = $cart->menu->image;
                                     } else {
                                         $imgSrc = asset('storage/' . $cart->menu->image);
@@ -244,20 +242,18 @@
         const btnText = document.getElementById('btnText');
         const btnIcon = document.getElementById('btnIcon');
 
-        // Validasi Alamat
         if (!address) {
             alert('Mohon isi alamat pengiriman terlebih dahulu.');
             document.getElementById('addressInput').focus();
-            return false; // Batalkan submit
+            return false; 
         }
 
-        // Efek Loading pada Tombol
         btn.disabled = true;
         btn.classList.add('opacity-75', 'cursor-not-allowed');
         btnText.innerText = 'Memproses Pesanan...';
         btnIcon.classList.add('hidden');
 
-        return true; // Lanjutkan submit
+        return true; 
     }
 </script>
 @endpush

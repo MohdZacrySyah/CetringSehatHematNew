@@ -2,39 +2,42 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Menu;
 use App\Models\Order;
-use App\Models\User;
 use App\Models\Review;
-use Illuminate\Support\Facades\Storage;
+use App\Models\User;
+use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
-   public function index()
-{
-    $totalOrders = Order::count();
-    $totalMenus = Menu::count();
-    $totalUsers = User::where('role', 'user')->count();
-    $recentOrders = Order::latest()->take(5)->get();
+    public function index()
+    {
+        $totalOrders = Order::count();
+        
+        // PERBAIKAN: Menambahkan variabel $revenue yang hilang
+        $revenue = Order::whereIn('status', ['paid', 'completed', 'processing'])
+                        ->sum('total_bayar');
 
-    // ADD THIS LINE: Calculate Revenue (Sum of 'total_bayar' where status is 'paid')
-    // Ensure you import the Order model if not already imported
-    $revenue = Order::where('status', 'paid')->sum('total_bayar'); 
+        $totalMenus = Menu::count();
+        $totalUsers = User::where('role', 'user')->count();
 
-    return view('admin.dashboard', compact(
-        'totalOrders', 
-        'totalMenus', 
-        'totalUsers', 
-        'recentOrders',
-        'revenue' // <--- Pass the new variable here
-    ));
-}
-    // --- MANAJEMEN MENU ---
+        $recentOrders = Order::with('user')
+                             ->latest()
+                             ->limit(5)
+                             ->get();
+
+        return view('admin.dashboard', compact(
+            'totalOrders', 
+            'revenue',        // <-- Variabel ini penting
+            'totalMenus', 
+            'totalUsers', 
+            'recentOrders'
+        ));
+    }
 
     public function menus()
     {
-        $menus = Menu::latest()->get();
+        $menus = Menu::paginate(10);
         return view('admin.menus.index', compact('menus'));
     }
 
@@ -43,85 +46,62 @@ class AdminController extends Controller
         return view('admin.menus.create');
     }
 
-    // 1. PERBAIKAN STORE MENU (TAMBAH)
     public function storeMenu(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            // Validasi kategori harus mencakup 'makanan_sehat'
-            'category' => 'required|in:makanan,minuman,snack,makanan_sehat,paket_hemat', 
-            // Validasi gambar max 5MB agar aman
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120', 
+            'description' => 'required|string',
+            'price' => 'required|numeric',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'category' => 'required|in:makanan,minuman,snack',
+            'is_paket_hemat' => 'boolean'
         ]);
 
-        $data = $request->all();
-
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('menus', 'public');
-            $data['image'] = $imagePath;
+            $path = $request->file('image')->store('menus', 'public');
+            $validated['image'] = $path;
         }
 
-        Menu::create($data);
+        Menu::create($validated);
 
-        return redirect()->route('admin.menus')->with('success', 'Menu berhasil ditambahkan!');
+        return redirect()->route('admin.menus')->with('success', 'Menu berhasil ditambahkan');
     }
 
-    public function editMenu($id)
+    public function editMenu(Menu $menu)
     {
-        $menu = Menu::findOrFail($id);
         return view('admin.menus.edit', compact('menu'));
     }
 
-    // 2. PERBAIKAN UPDATE MENU (EDIT)
-    public function updateMenu(Request $request, $id)
+    public function updateMenu(Request $request, Menu $menu)
     {
-        $menu = Menu::findOrFail($id);
-
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            // Validasi kategori
-            'category' => 'required|in:makanan,minuman,snack,makanan_sehat,paket_hemat',
-            // Validasi gambar max 5MB
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+            'description' => 'required|string',
+            'price' => 'required|numeric',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'category' => 'required|in:makanan,minuman,snack',
+            'is_paket_hemat' => 'boolean'
         ]);
 
-        $data = $request->except(['image']);
-
         if ($request->hasFile('image')) {
-            // Hapus gambar lama
-            if ($menu->image && Storage::disk('public')->exists($menu->image)) {
-                Storage::disk('public')->delete($menu->image);
-            }
-            
             $path = $request->file('image')->store('menus', 'public');
-            $data['image'] = $path;
+            $validated['image'] = $path;
         }
 
-        $menu->update($data);
+        $menu->update($validated);
 
-        return redirect()->route('admin.menus')->with('success', 'Menu berhasil diperbarui!');
+        return redirect()->route('admin.menus')->with('success', 'Menu berhasil diperbarui');
     }
 
-    public function destroyMenu($id)
+    public function destroyMenu(Menu $menu)
     {
-        $menu = Menu::findOrFail($id);
-        
-        if ($menu->image && Storage::disk('public')->exists($menu->image)) {
-            Storage::disk('public')->delete($menu->image);
-        }
-
         $menu->delete();
-
-        return redirect()->route('admin.menus')->with('success', 'Menu berhasil dihapus!');
+        return redirect()->route('admin.menus')->with('success', 'Menu berhasil dihapus');
     }
-
+    
     public function reviews()
     {
-        $reviews = Review::with('user', 'menu')->latest()->get();
+        $reviews = Review::with(['user', 'menu'])->latest()->paginate(10);
         return view('admin.reviews.index', compact('reviews'));
     }
 }
