@@ -4,15 +4,13 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CartController;
-use App\Http\Controllers\CheckoutController; // Mengurus pembuatan order
-use App\Http\Controllers\OrderController;    // Mengurus pembayaran Midtrans
+use App\Http\Controllers\OrderController;    // Semua logika order & midtrans disini
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderArchiveController;
 use App\Http\Controllers\AdminOrderController;
-use App\Http\Controllers\MenuController; // <--- Pastikan baris ini ada di paling atas
-
+use App\Http\Controllers\MenuController; 
 
 /*
 |--------------------------------------------------------------------------
@@ -23,6 +21,7 @@ use App\Http\Controllers\MenuController; // <--- Pastikan baris ini ada di palin
 Route::get('/', function () {
     return view('welcome');
 });
+
 // Rute untuk Detail Menu
 Route::get('/menu/{id}', [MenuController::class, 'show'])->name('menu.detail');
 
@@ -38,7 +37,10 @@ Route::get('/tentang-kami', function () {
 })->middleware(['auth', 'verified'])->name('tentang');
 
 
-/* --- CART ROUTES --- */
+/* |--------------------------------------------------------------------------
+| CART ROUTES
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/keranjang', [CartController::class, 'show'])->name('cart');
     Route::post('/keranjang/tambah', [CartController::class, 'add'])->name('cart.add');
@@ -50,30 +52,41 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Order & Payment Routes (FIXED)
+| ORDER & PAYMENT ROUTES (UPDATED)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'verified'])->group(function () {
-    // 1. Checkout (Ke CheckoutController)
-    Route::post('/order/checkout', [CheckoutController::class, 'checkout'])->name('order.checkout');
     
-    // 2. Halaman Bayar Midtrans (Ke OrderController)
-    Route::get('/orders/{order}/pay', [OrderController::class, 'showPayment'])->name('orders.pay');
+    // 1. Halaman Checkout (Input Alamat & Note)
+    Route::get('/checkout', [OrderController::class, 'checkoutPage'])->name('order.checkoutPage');
     
-    // 3. Sukses
-    Route::get('/order/{order}/success', [OrderController::class, 'success'])->name('order.success');
+    // 2. Proses Buat Order (Dari tombol "Buat Pesanan")
+    Route::post('/checkout/process', [OrderController::class, 'processCheckout'])->name('order.process');
     
-    // 4. Detail
-    Route::get('/order/{order}/detail', [OrderController::class, 'detail'])->name('order.detail');
+    // 3. Halaman Bayar Midtrans
+    // Nama route disesuaikan dengan controller: 'order.payment.show'
+    Route::get('/orders/{id}/pay', [OrderController::class, 'showPayment'])->name('order.payment.show');
+    
+    // 4. Sukses Bayar
+    Route::get('/order/{id}/success', [OrderController::class, 'success'])->name('order.success');
+    
+    // 5. Detail Pesanan
+    Route::get('/order/{id}/detail', [OrderController::class, 'detail'])->name('order.detail');
+    
+    // 6. Batalkan Pesanan (Fitur Baru)
+    Route::put('/order/{id}/cancel', [OrderController::class, 'cancelOrder'])->name('order.cancel');
+
+    // 7. Cetak Struk (Opsional)
     Route::get('/order/struktur', [OrderController::class, 'struktur'])->name('order.struktur');
 });
 
-/* --- ADMIN ROUTES --- */
+
+/* |--------------------------------------------------------------------------
+| ADMIN ROUTES
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
-    
-    Route::get('/admin/reviews', [AdminController::class, 'reviews'])->name('admin.reviews');
-
     
     // Menu Management
     Route::get('/admin/menus', [AdminController::class, 'menus'])->name('admin.menus');
@@ -83,10 +96,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/admin/menus/{menu}', [AdminController::class, 'updateMenu'])->name('admin.menus.update');
     Route::delete('/admin/menus/{menu}', [AdminController::class, 'destroyMenu'])->name('admin.menus.destroy');
     
-   
-
+    // Order & Review Management
     Route::prefix('admin')->name('admin.')->group(function(){
-  Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders');
+        Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders');
         Route::get('/orders/{id}', [AdminOrderController::class, 'show'])->name('orders.show');
         Route::put('/orders/{id}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.updateStatus');
         Route::get('/reviews', [AdminController::class, 'reviews'])->name('reviews.index');
@@ -94,7 +106,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
 });
 
 
-/* --- REVIEW, NOTIFICATION, ARCHIVE, PROFILE --- */
+/* |--------------------------------------------------------------------------
+| REVIEW, NOTIFICATION, ARCHIVE, PROFILE
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth', 'verified'])->group(function () {
     // Reviews
     Route::get('/ratings', [ReviewController::class, 'index'])->name('ratings.index');

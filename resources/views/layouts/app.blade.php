@@ -7,18 +7,21 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     <style>
-        /* === GLOBAL STYLES === */
+        /* === GLOBAL STYLES (Custom Overlay & Sidebar) === */
         body, html {
             margin: 0;
             padding: 0;
-            font-family: Arial, sans-serif;
+            font-family: 'Figtree', sans-serif; /* Sesuaikan dengan font Tailwind */
             background-color: #e0e9cf;
             color: #333;
             min-height: 100vh;
         }
         .main-wrapper {
             min-height: 100vh;
+            /* Background gradient default */
             background: linear-gradient(135deg, #a8b87c 0%, #879b55 100%);
             padding-bottom: 70px;
             position: relative;
@@ -226,7 +229,6 @@
 </head>
 <body>
     
-    <!-- SIDEBAR -->
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <span class="close-btn" onclick="closeSidebar()">
@@ -259,10 +261,8 @@
         </button>
     </div>
     
-    <!-- OVERLAY -->
     <div id="overlay" class="overlay" onclick="closeSidebar()"></div>
     
-    <!-- MODAL KONFIRMASI LOGOUT -->
     <div id="logoutModal" class="logout-modal">
         <div class="logout-modal-content">
             <div class="logout-modal-icon">
@@ -284,12 +284,10 @@
         </div>
     </div>
     
-    <!-- MAIN WRAPPER -->
     <div class="main-wrapper" id="mainContent">
         @yield('content')
     </div>
     
-    <!-- BOTTOM NAVIGATION -->
     <div class="bottom-nav">
         <a href="{{ route('dashboard') }}" class="nav-item {{ request()->is('dashboard') ? 'active' : '' }}">
             <i class="fa-solid fa-house"></i>
@@ -305,7 +303,6 @@
         </a>
     </div>
     
-    <!-- JAVASCRIPT -->
     <script>
         function openSidebar() {
             document.getElementById('sidebar').classList.add('open');

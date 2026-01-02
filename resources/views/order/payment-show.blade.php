@@ -1,62 +1,181 @@
 @extends('layouts.app')
-@section('title', 'Pembayaran')
+@section('title', 'Pembayaran - Catering Sehat Hemat')
 
 @push('styles')
-<script type="text/javascript"
-    src="https://app.sandbox.midtrans.com/snap/snap.js"
-    data-client-key="{{ config('midtrans.client_key') }}">
-</script>
+<style>
+    body { background: #8B9D5E; margin: 0; min-height: 100vh; }
+    .detail-container { max-width: 600px; margin: 20px auto; padding: 0 15px; }
+    .info-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 15px; }
+    .btn-action { width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; border:none; margin-bottom: 10px; display: block; text-align: center; text-decoration: none; }
+    .btn-pay { background: #28a745; color: white; }
+    .btn-pay:hover { background: #218838; }
+    .btn-cancel { background: #fff; color: #dc3545; border: 2px solid #dc3545; }
+    .btn-cod { background: #e67e22; color: white; }
+</style>
 @endpush
 
 @section('content')
-<div class="py-12">
-    <div class="max-w-xl mx-auto sm:px-6 lg:px-8">
-        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 text-center" style="margin-top: 50px; border: 1px solid #ddd;">
+<div class="text-center text-white font-bold text-lg p-4 bg-[#6B7D4A]">
+    @if($order->payment_method == 'cod')
+        Pesanan Diterima (COD)
+    @else
+        Selesaikan Pembayaran
+    @endif
+</div>
+
+<div class="detail-container">
+
+    @if($order->payment_method != 'cod')
+        
+        @php
+            $sekarang = \Carbon\Carbon::now();
+            $batasWaktu = \Carbon\Carbon::parse($order->payment_due_at);
+            // Hitung selisih detik (bisa minus jika sudah lewat)
+            $sisaDetik = $sekarang->diffInSeconds($batasWaktu, false);
+        @endphp
+
+        <div class="info-card text-center border-2 border-yellow-400 bg-yellow-50">
+            <div class="text-sm text-yellow-800 mb-1">Sisa waktu pembayaran:</div>
             
-            <h2 class="text-2xl font-bold mb-4" style="color: #4A572A;">Konfirmasi Pembayaran</h2>
-            <p class="mb-2">No. Order: <strong>{{ $order->order_number }}</strong></p>
-            
-            <div style="margin: 20px 0; padding: 20px; background: #f9f9f9; border-radius: 8px;">
-                <p>Total yang harus dibayar:</p>
-                <h1 style="font-size: 2rem; color: #6B8E23; font-weight: bold;">
-                    Rp {{ number_format($order->total_bayar, 0, ',', '.') }}
-                </h1>
+            <div class="text-3xl font-mono font-bold text-red-600 tracking-wider" id="countdown">
+                Memuat...
             </div>
             
-            <button id="pay-button" style="background-color: #4A572A; color: white; padding: 15px 40px; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%;">
-                BAYAR SEKARANG
-            </button>
+            <div class="text-xs text-gray-500 mt-2">
+                Batas Akhir: {{ $batasWaktu->format('d M Y, H:i') }}
+            </div>
+        </div>
+    @else
+        <div class="info-card text-center bg-orange-50 border border-orange-200">
+            <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3 text-orange-600">
+                <i class="fa-solid fa-truck-fast text-2xl"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800">Siapkan Uang Tunai</h2>
+            <p class="text-gray-600 mt-2 text-sm px-4">
+                Pesanan Anda telah masuk sistem. Mohon siapkan uang tunai pas saat kurir kami tiba di lokasi Anda.
+            </p>
+        </div>
+    @endif
 
+    <div class="info-card">
+        <h3 class="font-bold border-b pb-2 mb-3 text-gray-700">Rincian Tagihan</h3>
+        
+        <div class="flex justify-between mb-2 text-sm">
+            <span class="text-gray-500">Order ID</span>
+            <span class="font-semibold">#{{ $order->order_number }}</span>
+        </div>
+        
+        <div class="flex justify-between mb-2 text-sm">
+            <span class="text-gray-500">Metode</span>
+            <span class="font-bold uppercase text-[#556B2F]">{{ $order->payment_method }}</span>
+        </div>
+
+        <div class="flex justify-between mb-4 text-sm">
+            <span class="text-gray-500">Alamat</span>
+            <span class="text-right font-medium text-gray-700 max-w-[60%] line-clamp-2">
+                {{ $order->delivery_address }}
+            </span>
+        </div>
+
+        <div class="border-t pt-3 flex justify-between items-center">
+            <span class="font-bold text-gray-700">Total Tagihan</span>
+            <span class="font-bold text-2xl text-green-600">
+                Rp {{ number_format($order->total_bayar, 0, ',', '.') }}
+            </span>
         </div>
     </div>
+
+    @if($order->payment_method == 'cod')
+        <a href="{{ route('dashboard') }}" class="btn-action btn-pay">
+            <i class="fa-solid fa-check"></i> Selesai
+        </a>
+        <a href="{{ route('order.detail', $order->id) }}" class="btn-action bg-gray-100 text-gray-600 hover:bg-gray-200">
+            Lihat Detail Pesanan
+        </a>
+    @else
+        <div id="payment-buttons" style="{{ $sisaDetik <= 0 ? 'display:none' : '' }}">
+            <button id="pay-button" class="btn-action btn-pay shadow-lg transform hover:-translate-y-1">
+                <i class="fa-solid fa-wallet"></i> Bayar Sekarang
+            </button>
+        </div>
+
+        <form action="{{ route('order.cancel', $order->id) }}" method="POST" onsubmit="return confirm('Yakin ingin membatalkan pesanan?');">
+            @csrf @method('PUT')
+            <button type="submit" class="btn-action btn-cancel mt-3">
+                Batalkan Pesanan
+            </button>
+        </form>
+    @endif
+
 </div>
 @endsection
 
 @push('scripts')
-<script type="text/javascript">
-    var payButton = document.getElementById('pay-button');
-    
-    payButton.addEventListener('click', function () {
-        // Trigger Popup Midtrans
-        window.snap.pay('{{ $snapToken }}', {
-            onSuccess: function(result){
-                // KITA TANGKAP HASIL JSON DARI MIDTRANS
-                // Dan kirimkan datanya ke URL success via Query String
-                var resultString = JSON.stringify(result);
-                window.location.href = "{{ route('order.success', $order->id) }}?payment_data=" + encodeURIComponent(resultString);
-            },
-            onPending: function(result){
-                alert("Menunggu pembayaran!");
-                location.reload();
-            },
-            onError: function(result){
-                alert("Pembayaran gagal!");
-                location.reload();
-            },
-            onClose: function(){
-                alert('Anda menutup popup tanpa menyelesaikan pembayaran');
+@if($order->payment_method != 'cod')
+    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}"></script>
+    <script>
+        // 🔴 AMBIL SISA WAKTU DARI PHP (Server Side) 🔴
+        // Kita parsing angka integer dari PHP langsung ke variabel JS
+        let remainingSeconds = parseInt("{{ $sisaDetik }}");
+
+        function updateTimer() {
+            // Jika waktu habis
+            if (remainingSeconds <= 0) {
+                document.getElementById("countdown").innerHTML = "WAKTU HABIS";
+                document.getElementById("countdown").classList.add("text-gray-500");
+                
+                // Sembunyikan tombol bayar
+                const btnContainer = document.getElementById("payment-buttons");
+                if(btnContainer) btnContainer.style.display = "none";
+                
+                return;
             }
-        });
-    });
-</script>
+
+            // Konversi detik ke Jam : Menit : Detik
+            const hours = Math.floor(remainingSeconds / 3600);
+            const minutes = Math.floor((remainingSeconds % 3600) / 60);
+            const seconds = remainingSeconds % 60;
+
+            // Format 2 digit (01, 02, dst)
+            const h = hours < 10 ? "0" + hours : hours;
+            const m = minutes < 10 ? "0" + minutes : minutes;
+            const s = seconds < 10 ? "0" + seconds : seconds;
+
+            // Tampilkan
+            document.getElementById("countdown").innerHTML = h + " : " + m + " : " + s;
+
+            // Kurangi 1 detik
+            remainingSeconds--;
+        }
+
+        // Jalankan timer setiap 1 detik
+        setInterval(updateTimer, 1000);
+        // Jalankan sekali di awal biar gak nunggu 1 detik baru muncul
+        updateTimer();
+
+        // 🟢 LOGIC TOMBOL BAYAR 🟢
+        const payButton = document.querySelector('#pay-button');
+        if(payButton) {
+            payButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.snap.pay('{{ $snapToken }}', {
+                    onSuccess: function(result){
+                        window.location.href = "{{ route('order.success', $order->id) }}?payment_data=" + JSON.stringify(result);
+                    },
+                    onPending: function(result){
+                        alert("Menunggu pembayaran...");
+                        location.reload();
+                    },
+                    onError: function(result){
+                        alert("Pembayaran gagal!");
+                        location.reload();
+                    },
+                    onClose: function(){
+                        // User tutup popup, biarkan saja
+                    }
+                });
+            });
+        }
+    </script>
+@endif
 @endpush

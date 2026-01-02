@@ -246,12 +246,11 @@
         <span id="total-price">Rp 0</span>
     </div>
     
-    <form action="{{ route('order.checkout') }}" method="POST">
-        @csrf
-        <button type="submit" class="checkout-button" id="checkoutBtn">
-            Beli Sekarang
-        </button>
-    </form>
+    <form action="{{ route('order.checkoutPage') }}" method="GET"> 
+    <button type="submit" class="checkout-button" id="checkoutBtn">
+        Lanjut ke Pembayaran
+    </button>
+</form>
 </div>
 @endsection
 

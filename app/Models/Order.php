@@ -10,16 +10,23 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
+       'user_id',
         'order_number',
-        'user_id',
         'subtotal',
-        'biaya_pengiriman',
-        'biaya_aplikasi',
+        'biaya_pengiriman', // Pastikan ini ada
+        'biaya_aplikasi',   // Pastikan ini ada
         'total_bayar',
-        'payment_method',
         'status',
-        'customer_notes',
         'paid_at',
+        'payment_method',
+        'midtrans_transaction_id',
+        'midtrans_order_id',
+        'payment_response',
+        
+        // 🔴 TAMBAHKAN 3 BARIS INI (WAJIB) 🔴
+        'delivery_address',
+        'customer_notes',
+        'payment_due_at',
     ];
 
     protected $casts = [
