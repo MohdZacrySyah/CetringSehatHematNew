@@ -117,18 +117,36 @@
         padding: 12px 16px; transition: background 0.2s;
         min-width: 0;
         gap: 14px;
+        /* Tambahkan relative agar link bisa diatur */
+        position: relative;
     }
     .menu-card:hover { background: #c2d5a0; }
+    
+    /* Link Wrapper untuk area klik */
+    .menu-link-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex: 1;
+        text-decoration: none;
+        color: inherit;
+        min-width: 0; /* Fix flex overflow */
+    }
+
     .menu-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
     .menu-info { flex: 1; min-width: 0;}
     .menu-title { font-size: 1.1rem; color: #3d4621; font-weight: 650; margin-bottom: 4px; white-space:nowrap; overflow: hidden; text-overflow: ellipsis;}
     .menu-price { font-size: .99rem; color: #556B2F; }
+    
     .menu-action button {
         background: #879b55; border: none; color: #fff;
         font-weight: bold; border-radius: 10px;
         padding: 9px 18px; font-size: 0.98rem;
         cursor: pointer; transition: background 0.2s;
         min-width: 75px;
+        /* Pastikan tombol di atas link */
+        z-index: 2; 
+        position: relative;
     }
     .menu-action button:hover { background: #556b2f; }
 
@@ -173,6 +191,14 @@
         box-shadow:0 2px 8px #879b5520;
         overflow:hidden;
         width:130px;
+        display: flex;
+        flex-direction: column;
+    }
+    /* Link wrapper untuk paket */
+    .paket-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
     }
     .paket-card img{
         width:100%;
@@ -264,17 +290,23 @@
     <div class="paket-grid">
         @foreach(($paketHemat ?? collect()) as $menu)
             <div class="paket-card">
-                {{-- PERBAIKAN 1: Tambahkan storage/ pada src gambar --}}
-                <img src="{{ asset('storage/' . $menu->image) }}" alt="{{ $menu->name }}">
+                {{-- WRAPPER LINK KE DETAIL MENU --}}
+                <a href="{{ route('menu.detail', $menu->id) }}" class="paket-link">
+                    <img src="{{ asset('storage/' . $menu->image) }}" alt="{{ $menu->name }}">
+                </a>
+                
                 <div class="paket-info">
-                    <h6>{{ $menu->name }}</h6>
+                    <a href="{{ route('menu.detail', $menu->id) }}" class="paket-link">
+                        <h6>{{ $menu->name }}</h6>
+                    </a>
                     <p>Rp. {{ number_format($menu->price, 0, ',', '.') }}</p>
+                    
+                    {{-- Form Tambah ke Keranjang (Tanpa Link) --}}
                     <form action="{{ route('cart.add') }}" method="POST">
                         @csrf
                         <input type="hidden" name="id" value="{{ $menu->id }}">
                         <input type="hidden" name="name" value="{{ $menu->name }}">
                         <input type="hidden" name="price" value="{{ $menu->price }}">
-                        {{-- PERBAIKAN 2: Tambahkan storage/ pada input hidden image --}}
                         <input type="hidden" name="image" value="{{ asset('storage/' . $menu->image) }}">
                         <button type="submit">Tambah</button>
                     </form>
@@ -287,27 +319,28 @@
 {{-- LIST MENU NORMAL --}}
 <div class="menu-list-area" id="menuListNormal">
     @foreach($menus as $menu)
-    {{-- PERBAIKAN 3: Tambahkan storage/ pada data-image agar JS Search juga benar --}}
     <div class="menu-card"
          data-id="{{ $menu->id }}"
          data-name="{{ $menu->name }}"
          data-price="{{ $menu->price }}"
          data-image="{{ asset('storage/' . $menu->image) }}">
          
-        {{-- PERBAIKAN 4: Tambahkan storage/ pada src gambar --}}
-        <img class="menu-thumb" src="{{ asset('storage/' . $menu->image) }}" alt="{{ $menu->name }}">
-        
-        <div class="menu-info">
-            <div class="menu-title">{{ $menu->name }}</div>
-            <div class="menu-price">RP. {{ number_format($menu->price, 0, ',', '.') }}</div>
-        </div>
+        {{-- WRAPPER LINK KE DETAIL MENU (Membungkus Gambar & Info) --}}
+        <a href="{{ route('menu.detail', $menu->id) }}" class="menu-link-wrapper">
+            <img class="menu-thumb" src="{{ asset('storage/' . $menu->image) }}" alt="{{ $menu->name }}">
+            <div class="menu-info">
+                <div class="menu-title">{{ $menu->name }}</div>
+                <div class="menu-price">RP. {{ number_format($menu->price, 0, ',', '.') }}</div>
+            </div>
+        </a>
+
+        {{-- Tombol Aksi (Di luar Link) --}}
         <div class="menu-action">
             <form action="{{ route('cart.add') }}" method="POST">
                 @csrf
                 <input type="hidden" name="id" value="{{ $menu->id }}">
                 <input type="hidden" name="name" value="{{ $menu->name }}">
                 <input type="hidden" name="price" value="{{ $menu->price }}">
-                {{-- PERBAIKAN 5: Tambahkan storage/ pada input hidden image --}}
                 <input type="hidden" name="image" value="{{ asset('storage/' . $menu->image) }}">
                 <button type="submit">Tambah</button>
             </form>
@@ -450,9 +483,12 @@
         searchInput.value = product.name;
         searchResultWrapper.classList.add('show');
 
+        // UPDATE JS: Tambahkan Link pada Gambar Hasil Pencarian
         singleResultArea.innerHTML = `
             <div class="search-result-card">
-                <img src="${product.image}" alt="${product.name}">
+                <a href="/menu/${product.id}">
+                    <img src="${product.image}" alt="${product.name}">
+                </a>
                 <h4>${product.name}</h4>
                 <p>RP. ${parseInt(product.price).toLocaleString('id-ID')}</p>
                 <form action="{{ route('cart.add') }}" method="POST">

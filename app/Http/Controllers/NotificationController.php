@@ -22,17 +22,19 @@ class NotificationController extends Controller
     // Detail notifikasi (tandai sebagai dibaca)
     public function show($id)
     {
+        // 1. Cari notifikasi milik user ini
         $notification = OrderNotification::where('id', $id)
             ->where('user_id', Auth::id())
             ->firstOrFail();
 
-        // Tandai sebagai dibaca
+        // 2. Tandai sebagai "Sudah Dibaca" (jika belum)
         if (!$notification->is_read) {
-            $notification->is_read = true;
-            $notification->save();
+            $notification->update(['is_read' => true]);
         }
 
-        return view('notifikasi-detail', compact('notification'));
+        // 3. LEMPAR (REDIRECT) KE HALAMAN DETAIL PESANAN
+        // Pastikan route 'order.detail' sudah ada di web.php
+        return redirect()->route('order.detail', $notification->order_id);
     }
 
     // Tandai semua sebagai dibaca

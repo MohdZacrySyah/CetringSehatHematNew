@@ -4,7 +4,7 @@
 @push('styles')
 <style>
     body {
-        background: #bfc993;
+        background: #8c9e5e; 
     }
     .notif-section {
         max-width: 1070px;
@@ -12,7 +12,7 @@
         padding: 15px 0 80px 0;
     }
     .notif-header {
-        background-color: #879b55;
+        background-color: #7b8e50;
         color: #fff;
         padding: 15px 0;
         border-radius: 9px;
@@ -45,105 +45,113 @@
         margin-bottom: 15px;
     }
     .mark-all-btn {
-        background: #879b55;
+        background: #7b8e50;
         color: #fff;
         border: none;
         padding: 8px 16px;
         border-radius: 8px;
-        font-size: 0.9rem;
+        font-size: 0.8rem;
         cursor: pointer;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     .mark-all-btn:hover {
         background: #556b2f;
     }
+    
     .notif-list-block {
-        background: #e0e9cf;
-        border-radius: 13px;
-        padding: 15px 17px 13px 17px;
-        box-shadow: 0 2px 10px #c2d5a023;
-        margin-bottom: 18px;
+        background: #ffffff; 
+        border-radius: 15px;
+        padding: 15px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        margin-bottom: 12px;
         display: flex;
         align-items: flex-start;
-        gap: 13px;
+        gap: 15px;
         cursor: pointer;
-        transition: background 0.2s;
         text-decoration: none;
         color: inherit;
         position: relative;
+        transition: transform 0.1s;
     }
-    .notif-list-block:hover {
-        background: #d0e0bc;
+    .notif-list-block:active {
+        transform: scale(0.99);
     }
     .notif-list-block.unread {
-        border-left: 4px solid #879b55;
+        background: #fdfdfd; 
+        border-left: 5px solid #d32f2f; 
     }
+    
     .notif-img {
-        width: 54px;
-        height: 54px;
-        border-radius: 12px;
+        width: 60px;
+        height: 60px;
+        border-radius: 10px;
         object-fit: cover;
-        background: #e8efd8;
-        border: 1.5px solid #fff;
-        box-shadow: 0 1px 3px #9bb48315;
+        background: #eee;
+        border: 1px solid #ddd;
         flex-shrink: 0;
     }
+    
     .notif-main {
         flex: 1;
         display: flex;
         flex-direction: column;
-        justify-content: flex-start;
+        /* Tambahkan min-width agar layout stabil */
+        min-width: 0; 
     }
     .notif-row-top {
         display: flex;
         align-items: center;
-        gap: 10px;
+        justify-content: space-between;
+        margin-bottom: 5px;
     }
     .notif-title {
         font-weight: bold;
         font-size: 1rem;
-        color: #264614;
+        color: #2c3e50;
     }
-    .notif-check {
-        color: #54ba2b;
-        font-size: 1.18rem;
-        margin-top: 2px;
-        margin-right: 2px;
-    }
-    .notif-content {
-        color: #334420;
-        font-size: .965rem;
-        margin: 0;
-        margin-top: 8px;
-        margin-bottom: 2px;
-    }
-    .notif-limit {
-        color: #158038;
-        font-size: .95rem;
-        font-weight: 600;
+    
+    .status-dot {
+        height: 10px;
+        width: 10px;
+        background-color: #28a745;
+        border-radius: 50%;
+        display: inline-block;
         margin-left: 5px;
     }
-    .notif-thanks {
-        font-size: .95rem;
-        color: #747642;
-        margin-top: 10px;
-        font-style: italic;
+
+    /* Style Konten Pesan Agar Tidak Terpotong */
+    .notif-content {
+        color: #555;
+        font-size: 0.9rem;
+        margin: 0;
+        line-height: 1.4;
+        /* Hapus overflow hidden agar teks tampil semua */
+        word-wrap: break-word; /* Agar teks panjang turun ke bawah */
     }
+
+    .notif-time {
+        color: #999;
+        font-size: 0.75rem;
+        margin-top: 8px;
+    }
+    
     .notif-delete {
-        position: absolute;
-        top: 15px;
-        right: 15px;
         color: #ab3d36;
-        font-size: 1.1rem;
+        background: none;
+        border: none;
+        font-size: 1rem;
         cursor: pointer;
-        z-index: 10;
+        padding: 5px;
+        margin-left: 5px;
     }
+    .notif-delete:hover {
+        color: #d32f2f;
+    }
+
     .notif-empty {
         text-align: center;
-        color: #666;
-        padding: 40px 20px;
-    }
-    @media (max-width: 660px){
-        .notif-section {padding-left: 2vw; padding-right: 2vw;}
+        color: #fff;
+        padding: 60px 20px;
     }
 </style>
 @endpush
@@ -159,8 +167,8 @@
 <div class="notif-section">
     @if($notifications->isEmpty())
         <div class="notif-empty">
-            <i class="fa-solid fa-bell-slash" style="font-size:3rem;color:#bbb;margin-bottom:15px;"></i>
-            <p>Belum ada notifikasi</p>
+            <i class="fa-solid fa-bell-slash" style="font-size:3rem;color:#eee;margin-bottom:15px;"></i>
+            <p>Belum ada notifikasi masuk.</p>
         </div>
     @else
         <div class="notif-actions">
@@ -174,25 +182,53 @@
 
         @foreach($notifications as $notif)
         <a href="{{ route('notifikasi.detail', $notif->id) }}" class="notif-list-block {{ !$notif->is_read ? 'unread' : '' }}">
-            <img src="{{ asset($notif->menu_image) }}" class="notif-img" alt="{{ $notif->menu_name }}">
+            
+            @php
+                $imgSrc = 'https://via.placeholder.com/60?text=IMG';
+                
+                if($notif->order && $notif->order->items->isNotEmpty()){
+                    $firstItem = $notif->order->items->first();
+                    if($firstItem->menu && $firstItem->menu->image){
+                        $imgSrc = asset('storage/' . $firstItem->menu->image);
+                    }
+                    elseif($firstItem->menu_image){
+                         $imgSrc = asset('storage/' . $firstItem->menu_image);
+                    }
+                }
+            @endphp
+
+            <img src="{{ $imgSrc }}" 
+                 class="notif-img" 
+                 alt="Order Img"
+                 onerror="this.onerror=null; this.src='https://via.placeholder.com/60?text=Err';">
+            
             <div class="notif-main">
                 <div class="notif-row-top">
-                    <span class="notif-title">{{ $notif->title }}</span>
-                    <span class="notif-check"><i class="fa-solid fa-square-check"></i></span>
+                    <div style="display:flex; align-items:center;">
+                        <span class="notif-title">{{ $notif->title }}</span>
+                        @if(!$notif->is_read)
+                            <span class="status-dot" title="Belum dibaca"></span>
+                        @endif
+                    </div>
+                    
+                    <form action="{{ route('notifikasi.destroy', $notif->id) }}" method="POST" onclick="event.stopPropagation(); if(!confirm('Hapus notifikasi ini?')) event.preventDefault();" style="margin:0;">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="notif-delete" title="Hapus Notifikasi">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </form>
                 </div>
+                
+                {{-- PERBAIKAN DI SINI: Tampilkan pesan asli tanpa Str::limit --}}
                 <p class="notif-content">
-                    {{ $notif->description }}
-                    <span class="notif-limit">{{ $notif->formatted_rating_deadline }}</span>
+                    {{ $notif->message }}
                 </p>
-                <div class="notif-thanks">Terimakasih atas pesanan anda</div>
+
+                <div class="notif-time">
+                    {{ $notif->created_at->diffForHumans() }}
+                </div>
             </div>
-            <form action="{{ route('notifikasi.destroy', $notif->id) }}" method="POST" onclick="event.stopPropagation(); if(confirm('Hapus notifikasi ini?')) this.submit(); else event.preventDefault();">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="notif-delete" style="border:none;background:none;">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
-            </form>
         </a>
         @endforeach
     @endif

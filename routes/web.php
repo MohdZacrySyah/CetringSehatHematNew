@@ -11,6 +11,7 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderArchiveController;
 use App\Http\Controllers\AdminOrderController;
+use App\Http\Controllers\MenuController; // <--- Pastikan baris ini ada di paling atas
 
 
 /*
@@ -22,6 +23,8 @@ use App\Http\Controllers\AdminOrderController;
 Route::get('/', function () {
     return view('welcome');
 });
+// Rute untuk Detail Menu
+Route::get('/menu/{id}', [MenuController::class, 'show'])->name('menu.detail');
 
 Route::get('/menu', function () {
     return view('menu');
@@ -69,6 +72,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
     
+    Route::get('/admin/reviews', [AdminController::class, 'reviews'])->name('admin.reviews');
+
+    
     // Menu Management
     Route::get('/admin/menus', [AdminController::class, 'menus'])->name('admin.menus');
     Route::get('/admin/menus/create', [AdminController::class, 'createMenu'])->name('admin.menus.create');
@@ -77,15 +83,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/admin/menus/{menu}', [AdminController::class, 'updateMenu'])->name('admin.menus.update');
     Route::delete('/admin/menus/{menu}', [AdminController::class, 'destroyMenu'])->name('admin.menus.destroy');
     
-    // Order Management
-    Route::get('/admin/orders', [AdminController::class, 'orders'])->name('admin.orders');
-    Route::get('/admin/orders/{order}', [AdminController::class, 'showOrder'])->name('admin.orders.show');
-    Route::put('/admin/orders/{order}/update', [AdminController::class, 'updateOrderStatus'])->name('admin.orders.update');
+   
 
     Route::prefix('admin')->name('admin.')->group(function(){
   Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders');
         Route::get('/orders/{id}', [AdminOrderController::class, 'show'])->name('orders.show');
         Route::put('/orders/{id}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.updateStatus');
+        Route::get('/reviews', [AdminController::class, 'reviews'])->name('reviews.index');
     });
 });
 
@@ -116,5 +120,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
 });
+
 
 require __DIR__.'/auth.php';

@@ -1,328 +1,240 @@
 @extends('layouts.app')
+
 @section('title', 'Detail Pesanan')
 
 @push('styles')
 <style>
+    /* 1. Setting Latar Belakang Halaman (Hijau Tua) */
     body {
-        background: #f8f9fa;
-        margin: 0;
-        padding: 0;
-        min-height: 100vh;
+        background-color: #8c9e5e !important;
+        color: #1a1a1a;
+        font-family: 'Poppins', sans-serif;
     }
-    .detail-header {
-        background: #fff;
-        padding: 15px;
+
+    /* 2. Header Halaman (Tombol Back & Judul) */
+    .custom-header {
         display: flex;
         align-items: center;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        position: sticky;
-        top: 0;
-        z-index: 100;
+        padding: 20px;
+        color: #1a1a1a;
     }
     .back-btn {
-        font-size: 1.3rem;
-        color: #333;
+        background: none;
+        border: none;
+        font-size: 1.2rem;
         cursor: pointer;
         margin-right: 15px;
-        text-decoration: none;
+        padding: 0;
+        color: #000;
     }
     .header-title {
         font-size: 1.1rem;
-        font-weight: 700;
-        color: #333;
+        font-weight: bold;
+        margin: 0;
     }
-    .detail-container {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 15px;
-        padding-bottom: 30px;
+
+    /* 3. Kartu Utama (Hijau Muda Terang) */
+    .detail-card {
+        background-color: #dbe6b6; /* Hijau muda lembut */
+        border-radius: 20px;
+        margin: 0 15px 30px 15px; 
+        padding: 25px 15px;
+        min-height: 70vh;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     }
-    .status-card {
-        background: #fff;
-        border: 2px solid #6B8E23;
+
+    /* 4. Judul & Gambar Menu */
+    .status-title {
+        text-align: center;
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin-bottom: 20px;
+        color: #000;
+    }
+    .menu-img-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+    .menu-img {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        background-color: #fff;
+    }
+    .menu-name-main {
+        text-align: center;
+        font-weight: bold;
+        font-size: 1rem;
+        margin-bottom: 25px;
+        color: #000;
+    }
+
+    /* 5. Baris Data (Kotak-kotak Cream) */
+    .data-row {
+        background-color: #f2f7e6; /* Warna cream kehijauan */
         border-radius: 12px;
-        padding: 15px;
-        margin-bottom: 15px;
-    }
-    .status-row {
+        padding: 12px 20px;
+        margin-bottom: 10px;
         display: flex;
         justify-content: space-between;
-        margin-bottom: 8px;
-    }
-    .status-row:last-child {
-        margin-bottom: 0;
-    }
-    .status-label {
-        color: #666;
+        align-items: center;
         font-size: 0.9rem;
-    }
-    .status-value {
         font-weight: 600;
-        color: #333;
+        color: #000;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    
+    .label-text {
+        color: #000;
+        font-weight: 600;
+    }
+    .value-text {
         text-align: right;
+        color: #000;
+        max-width: 60%; /* Agar teks panjang tidak merusak layout */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
-    .status-delivered {
-        color: #28a745 !important;
-    }
-    .status-processing {
-        color: #ffc107 !important;
-    }
-    .status-pending {
-        color: #dc3545 !important;
-    }
-    .section-title {
-        font-weight: 700;
-        color: #333;
-        margin: 20px 0 10px 0;
-        font-size: 1.05rem;
-    }
-    .product-card {
-        background: #fff;
-        border: 2px solid #6B8E23;
-        border-radius: 12px;
-        padding: 15px;
-        margin-bottom: 15px;
-    }
-    .product-item {
-        display: flex;
-        gap: 12px;
-        padding: 10px 0;
-        border-bottom: 1px solid #f0f0f0;
-    }
-    .product-item:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
-    }
-    .product-item:first-child {
-        padding-top: 0;
-    }
-    .product-img {
-        width: 70px;
-        height: 70px;
-        border-radius: 8px;
-        object-fit: cover;
-        background: #f0f0f0;
-        flex-shrink: 0;
-    }
-    .product-info {
-        flex: 1;
+
+    /* Tombol Aksi di Bawah */
+    .action-buttons {
+        margin-top: 30px;
         display: flex;
         flex-direction: column;
-        justify-content: center;
-    }
-    .product-name {
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 5px;
-    }
-    .product-price {
-        color: #666;
-        font-size: 0.9rem;
-        margin-bottom: 3px;
-    }
-    .product-qty {
-        color: #999;
-        font-size: 0.85rem;
-    }
-    .custom-note {
-        background: #fff;
-        border: 2px solid #6B8E23;
-        border-radius: 12px;
-        padding: 15px;
-        margin-bottom: 15px;
-    }
-    .note-title {
-        font-weight: 700;
-        color: #333;
-        margin-bottom: 8px;
-    }
-    .note-content {
-        color: #666;
-        font-size: 0.95rem;
-        font-style: italic;
-        line-height: 1.5;
-    }
-    .payment-summary {
-        background: #fff;
-        border: 2px solid #6B8E23;
-        border-radius: 12px;
-        padding: 15px;
-        margin-bottom: 15px;
-    }
-    .summary-row {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 10px;
-        font-size: 0.95rem;
-    }
-    .summary-row:last-child {
-        margin-bottom: 0;
-    }
-    .summary-label {
-        color: #666;
-    }
-    .summary-value {
-        font-weight: 600;
-        color: #333;
-    }
-    .summary-total {
-        font-size: 1.1rem;
-        font-weight: 700;
-        padding-top: 12px;
-        border-top: 2px solid #e0e0e0;
-        margin-top: 8px;
-    }
-    .summary-total .summary-value {
-        color: #28a745;
-        font-size: 1.2rem;
-    }
-    .action-buttons {
-        margin-top: 20px;
+        gap: 10px;
     }
     .btn-review {
-        width: 100%;
-        padding: 15px;
-        background: #28a745;
-        color: #fff;
+        background-color: #4a6f28; /* Hijau tombol */
+        color: white;
         border: none;
-        border-radius: 10px;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
+        padding: 12px;
+        border-radius: 12px;
+        font-weight: bold;
+        text-align: center;
         text-decoration: none;
         display: block;
-        text-align: center;
-        transition: all 0.3s;
-        margin-bottom: 10px;
+        width: 100%;
+        transition: background 0.2s;
     }
     .btn-review:hover {
-        background: #218838;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+        background-color: #3a5820;
         color: #fff;
-    }
-    .btn-secondary {
-        width: 100%;
-        padding: 15px;
-        background: #fff;
-        color: #333;
-        border: 2px solid #6B8E23;
-        border-radius: 10px;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        text-decoration: none;
-        display: block;
-        text-align: center;
-        transition: all 0.3s;
-    }
-    .btn-secondary:hover {
-        background: #f8f9fa;
-        color: #333;
     }
 </style>
 @endpush
 
 @section('content')
-<div class="detail-header">
-    <a href="{{ route('dashboard') }}" class="back-btn">
+
+<div class="custom-header">
+    <button class="back-btn" onclick="window.history.back()">
         <i class="fa-solid fa-arrow-left"></i>
-    </a>
-    <span class="header-title">Detail Pesanan</span>
+    </button>
+    <h1 class="header-title">Detail Pesanan</h1>
 </div>
 
-<div class="detail-container">
-    <div class="status-card">
-       
-        <div class="status-row">
-            <span class="status-label">Status Pembayaran</span>
-            <span class="status-value" style="color: #28a745;">
-                {{-- Kita cek status utama: Kalau bukan pending & bukan cancelled, berarti sudah bayar --}}
-                @if($order->status != 'pending' && $order->status != 'cancelled')
-                    Sudah Dibayar
-                @else
-                    Menunggu Dibayar
-                @endif
-            </span>
-        </div>
-        
-        <div class="status-row">
-            <span class="status-label">Tanggal Pemesanan</span>
-            <span class="status-value">{{ $order->created_at->format('d M Y, H:i') }} WIB</span>
-        </div>
+<div class="detail-card">
+    
+    <div class="status-title">
+        @if($order->status == 'completed')
+            Pesanan Selesai
+        @elseif($order->status == 'processing')
+            Pesanan Sedang Dimasak
+        @elseif($order->status == 'paid')
+            Sudah Dibayar
+        @elseif($order->status == 'cancelled')
+            Pesanan Dibatalkan
+        @else
+            Status: {{ ucfirst($order->status) }}
+        @endif
     </div>
 
-    <div class="section-title">Detail Produk</div>
-    <div class="product-card">
-        @foreach($order->items as $item)
-        <div class="product-item">
-            @if($item->menu_image)
-                <img src="{{ asset($item->menu_image) }}" 
-                     alt="{{ $item->menu_name }}" 
-                     class="product-img"
-                     onerror="this.src='https://via.placeholder.com/70x70/8B9D5E/ffffff?text=No+Image'">
-            @else
-                <img src="https://via.placeholder.com/70x70/8B9D5E/ffffff?text=No+Image" 
-                     alt="{{ $item->menu_name }}" 
-                     class="product-img">
-            @endif
-            <div class="product-info">
-                <div class="product-name">{{ $item->menu_name }}</div>
-                <div class="product-price">Rp {{ number_format($item->price, 0, ',', '.') }}</div>
-                <div class="product-qty">Jumlah: {{ $item->quantity }}</div>
-            </div>
-        </div>
-        @endforeach
+    @php
+        $firstItem = $order->items->first();
+        $imgSrc = 'https://via.placeholder.com/150?text=No+Image'; // Gambar Default
+
+        if ($firstItem) {
+            // Cek 1: Ambil dari relasi Menu (Paling Akurat)
+            if ($firstItem->menu && $firstItem->menu->image) {
+                $imgSrc = asset('storage/' . $firstItem->menu->image);
+            } 
+            // Cek 2: Backup ambil dari kolom menu_image di order_items
+            elseif ($firstItem->menu_image) {
+                $imgSrc = asset('storage/' . $firstItem->menu_image);
+            }
+        }
+    @endphp
+
+    <div class="menu-img-container">
+        <img src="{{ $imgSrc }}" 
+             alt="Menu Image" 
+             class="menu-img"
+             onerror="this.onerror=null; this.src='https://via.placeholder.com/150?text=Err+Img';">
+    </div>
+    
+    <div class="menu-name-main">
+        {{ $firstItem->menu_name ?? 'Pesanan Katering' }}
     </div>
 
-    @if($order->custom_note)
-    <div class="custom-note">
-        <div class="note-title">Catatan Custom</div>
-        <div class="note-content">{{ $order->custom_note }}</div>
-    </div>
-    @endif
+    @foreach($order->items as $item)
+        {{-- Baris: Jumlah & Nama --}}
+        <div class="data-row">
+            <span class="label-text">{{ $item->quantity }} Porsi</span>
+            <span class="value-text">{{ $item->menu_name }}</span>
+        </div>
 
-    <div class="section-title">Rincian Pembayaran</div>
-    <div class="payment-summary">
-        <div class="summary-row">
-            <span class="summary-label">Metode Pembayaran</span>
-            <span class="summary-value">
-                @if($order->payment_method)
-                    {{ strtoupper(str_replace('_', ' ', $order->payment_method)) }}
-                @else
-                    -
-                @endif
-            </span>
+        {{-- Baris: Total Harga per Item --}}
+        <div class="data-row">
+            <span class="label-text">Total</span>
+            <span class="value-text">Rp{{ number_format($item->price * $item->quantity, 0, ',', '.') }}</span>
         </div>
-        <div class="summary-row">
-            <span class="summary-label">Subtotal Harga</span>
-            <span class="summary-value">Rp {{ number_format($order->subtotal ?? 0, 0, ',', '.') }}</span>
-        </div>
-        <div class="summary-row">
-            <span class="summary-label">Biaya Jasa Aplikasi</span>
-            <span class="summary-value">Rp {{ number_format($order->biaya_aplikasi ?? 0, 0, ',', '.') }}</span>
-        </div>
-        <div class="summary-row">
-            <span class="summary-label">Biaya Layanan/Kirim</span>
-            <span class="summary-value">Rp {{ number_format($order->biaya_pengiriman ?? 0, 0, ',', '.') }}</span>
-        </div>
-        <div class="summary-row summary-total">
-            <span class="summary-label">Total Bayar</span>
-            <span class="summary-value">Rp {{ number_format($order->total_bayar ?? 0, 0, ',', '.') }}</span>
-        </div>
+    @endforeach
+
+    <div class="data-row">
+        <span class="label-text">Tanggal Pesan</span>
+        <span class="value-text">{{ $order->created_at->format('d.m.Y') }}</span>
+    </div>
+
+    <div class="data-row">
+        <span class="label-text">Tanggal Pengantaran</span>
+        <span class="value-text">
+            {{ $order->updated_at->format('d.m.Y') }}
+        </span>
+    </div>
+
+    <div class="data-row">
+        <span class="label-text">Alamat</span>
+        <span class="value-text" style="font-size:0.85rem;">{{ Str::limit($order->user->address ?? 'Alamat belum diatur', 25) }}</span>
+    </div>
+
+    <div class="data-row">
+        <span class="label-text">No.Telpon</span>
+        <span class="value-text">{{ $order->user->phone ?? '-' }}</span>
+    </div>
+    
+    <div class="data-row" style="margin-top: 20px; background-color: #fff; border: 1px solid #ddd;">
+        <span class="label-text">Total Bayar</span>
+        <span class="value-text" style="color: #d32f2f; font-size: 1.1rem; font-weight: bold;">
+            Rp {{ number_format($order->total_bayar, 0, ',', '.') }}
+        </span>
     </div>
 
     <div class="action-buttons">
-        @if($order->status === 'completed' || $order->status === 'delivered')
-        <a href="{{ route('review.create', $order->id) }}" class="btn-review">
-            <i class="fa-solid fa-star"></i> Beri Ulasan
-        </a>
+        @if($order->status == 'completed')
+            <a href="{{ route('review.create', $order->id) }}" class="btn-review">
+                <i class="fa-solid fa-star"></i> Beri Penilaian
+            </a>
         @endif
         
-        <a href="{{ route('dashboard') }}" class="btn-secondary">
-            <i class="fa-solid fa-cart-shopping"></i> Pesan Lagi
-        </a>
+        {{-- Tombol Pesan Lagi (Opsional) --}}
+        {{-- <a href="{{ route('menu.index') }}" class="btn-review" style="background:#8c9e5e;">
+            <i class="fa-solid fa-cart-plus"></i> Pesan Lagi
+        </a> --}}
     </div>
 
 </div>
+
 @endsection

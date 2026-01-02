@@ -13,21 +13,14 @@ class OrderItem extends Model
         'order_id',
         'menu_id',
         'menu_name',
-        'menu_image',
+        'menu_image', 
         'price',
         'quantity',
-        'subtotal',
+        'subtotal', // <--- JANGAN LUPA TAMBAHKAN INI
     ];
 
-    // Relasi ke Order
-    public function order()
-    {
-        return $this->belongsTo(Order::class);
-    }
-
-    // Relasi ke Menu
     public function menu()
     {
-        return $this->belongsTo(Menu::class);
+        return $this->belongsTo(Menu::class, 'menu_id');
     }
 }

@@ -1,71 +1,100 @@
-@extends('layouts.admin') {{-- Sesuaikan dengan layout admin Anda --}}
+@extends('layouts.admin')
+
 @section('title', 'Kelola Pesanan')
 
 @section('content')
-<div class="container py-4">
-    <h2 class="mb-4 font-bold text-xl">Daftar Pesanan Masuk</h2>
+<div class="container-fluid">
+
+    <h1 class="h3 mb-4 text-gray-800">Daftar Pesanan Masuk</h1>
 
     @if(session('success'))
-        <div class="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400">
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
-    <div class="relative overflow-x-auto shadow-md sm:rounded-lg bg-white p-4">
-        <table class="w-full text-sm text-left text-gray-500">
-            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                <tr>
-                    <th class="px-6 py-3">No Order</th>
-                    <th class="px-6 py-3">Pemesan</th>
-                    <th class="px-6 py-3">Total</th>
-                    <th class="px-6 py-3">Status Saat Ini</th>
-                    <th class="px-6 py-3">Aksi (Ubah Status)</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($orders as $order)
-                <tr class="bg-white border-b hover:bg-gray-50">
-                    <td class="px-6 py-4 font-bold">{{ $order->order_number }}</td>
-                    <td class="px-6 py-4">
-                        {{ $order->user->name }}<br>
-                        <span class="text-xs text-gray-400">{{ $order->created_at->format('d M Y H:i') }}</span>
-                    </td>
-                    <td class="px-6 py-4">Rp {{ number_format($order->total_bayar, 0, ',', '.') }}</td>
-                    <td class="px-6 py-4">
-                        @if($order->status == 'paid')
-                            <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">Sudah Dibayar</span>
-                        @elseif($order->status == 'processing')
-                            <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">Sedang Dimasak</span>
-                        @elseif($order->status == 'completed')
-                            <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">Selesai</span>
-                        @else
-                            <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">{{ $order->status }}</span>
-                        @endif
-                    </td>
-                    <td class="px-6 py-4">
-                        {{-- FORM UBAH STATUS --}}
-                        <form action="{{ route('admin.orders.updateStatus', $order->id) }}" method="POST" class="flex items-center gap-2">
-                            @csrf
-                            @method('PUT')
-                            <select name="status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2">
-                                <option value="paid" {{ $order->status == 'paid' ? 'selected' : '' }}>Paid</option>
-                                <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>Proses (Masak)</option>
-                                <option value="completed" {{ $order->status == 'completed' ? 'selected' : '' }}>Selesai (Antar)</option>
-                                <option value="cancelled" {{ $order->status == 'cancelled' ? 'selected' : '' }}>Batal</option>
-                            </select>
-                            <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2">
-                                Update
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-        
-        <div class="mt-4">
-            {{ $orders->links() }}
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Data Transaksi</h6>
+        </div>
+        <div class="card-body">
+            
+            {{-- Table Responsive: Agar bisa discroll di HP --}}
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped" width="100%" cellspacing="0">
+                    <thead class="table-dark">
+                        <tr class="text-center align-middle">
+                            <th>No Order</th>
+                            <th>Pemesan</th>
+                            <th>Total</th>
+                            <th>Status Saat Ini</th>
+                            <th style="min-width: 200px;">Aksi (Ubah Status)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($orders as $order)
+                        <tr>
+                            <td class="font-weight-bold align-middle">{{ $order->order_number }}</td>
+                            <td class="align-middle">
+                                <div class="fw-bold">{{ $order->user->name }}</div>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock"></i> {{ $order->created_at->format('d M Y H:i') }}
+                                </small>
+                            </td>
+                            <td class="align-middle">Rp {{ number_format($order->total_bayar, 0, ',', '.') }}</td>
+                            <td class="align-middle text-center">
+                                @if($order->status == 'paid')
+                                    <span class="badge bg-success p-2">Sudah Dibayar</span>
+                                @elseif($order->status == 'processing')
+                                    <span class="badge bg-warning text-dark p-2">Sedang Dimasak</span>
+                                @elseif($order->status == 'completed')
+                                    <span class="badge bg-primary p-2">Selesai/Diantar</span>
+                                @elseif($order->status == 'cancelled')
+                                    <span class="badge bg-danger p-2">Dibatalkan</span>
+                                @else
+                                    <span class="badge bg-secondary p-2">{{ ucfirst($order->status) }}</span>
+                                @endif
+                            </td>
+                            <td class="align-middle">
+                                {{-- FORM UPDATE STATUS --}}
+                                <form action="{{ route('admin.orders.updateStatus', $order->id) }}" method="POST">
+                                    @csrf
+                                    @method('PUT')
+                                    <div class="input-group">
+                                        <select name="status" class="form-select form-select-sm">
+                                            <option value="paid" {{ $order->status == 'paid' ? 'selected' : '' }}>Paid</option>
+                                            <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>Proses (Masak)</option>
+                                            <option value="completed" {{ $order->status == 'completed' ? 'selected' : '' }}>Selesai (Antar)</option>
+                                            <option value="cancelled" {{ $order->status == 'cancelled' ? 'selected' : '' }}>Batal</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    </div>
+                                    <div class="mt-1 text-center">
+                                        <a href="{{ route('admin.orders.show', $order->id) }}" class="text-decoration-none small">
+                                            <i class="fas fa-eye"></i> Lihat Detail
+                                        </a>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">Belum ada pesanan masuk.</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-3 d-flex justify-content-end">
+                {{ $orders->links() }}
+            </div>
+
         </div>
     </div>
+
 </div>
 @endsection

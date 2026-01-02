@@ -6,26 +6,26 @@ use Illuminate\Http\Request;
 use App\Models\Menu; // <--- Tambahkan ini di paling atas
 use Illuminate\Support\Facades\Storage; // <--- Tambahkan ini untuk hapus gambar
 use App\Models\Order; // <--- JANGAN LUPA TAMBAHKAN INI
+use App\Models\User;
+use App\Models\Review;
 
 class AdminController extends Controller
 {
     public function index()
-    {
-       // 1. Hitung Total Pesanan
-        $totalOrders = Order::count();
+{
+    // Hitung data untuk dashboard
+    $totalOrders = Order::count();
+    
+    // Hitung pendapatan (hanya yg statusnya paid/processing/completed)
+    $revenue = Order::whereIn('status', ['paid', 'processing', 'completed'])->sum('total_bayar');
+    
+    $totalMenus = Menu::count();
 
-        // 2. Hitung Total Pendapatan (Hanya dari pesanan yang statusnya 'completed' atau 'paid')
-        // Sesuaikan status mana yang Anda anggap sebagai pendapatan masuk
-        $revenue = Order::whereIn('status', ['paid', 'processing', 'completed'])->sum('total_bayar');
+    // Ambil 5 order terbaru
+    $recentOrders = Order::with('user')->latest()->take(5)->get();
 
-        // 3. Hitung Jumlah Menu
-        $totalMenus = Menu::count();
-
-        // 4. Ambil 5 Pesanan Terbaru untuk widget "Aktivitas Terbaru"
-        $recentOrders = Order::with('user')->latest()->take(5)->get();
-
-        return view('admin.dashboard', compact('totalOrders', 'revenue', 'totalMenus', 'recentOrders'));
-    }
+    return view('admin.dashboard', compact('totalOrders', 'revenue', 'totalMenus', 'recentOrders'));
+}
     // 1. Tampilkan Daftar Menu
     public function menus()
     {
@@ -142,4 +142,12 @@ public function editMenu(Menu $menu)
 
         return redirect()->back()->with('success', 'Status pesanan berhasil diperbarui!');
     }
+   public function reviews()
+    {
+        // Ambil data review, urutkan dari yang terbaru
+        $reviews = Review::with(['user', 'order'])->latest()->paginate(10);
+        
+        return view('admin.reviews.index', compact('reviews'));
+    }
+
 }

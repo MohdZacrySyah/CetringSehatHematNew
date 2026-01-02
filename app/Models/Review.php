@@ -5,29 +5,26 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class OrderNotification extends Model
+class Review extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'order_id',
         'user_id',
-        'order_id', // Kolom Baru
-        'title',
-        'message',  // Kolom Baru
-        'is_read',
+        'question',    // Pertanyaan: "Apa yang membuat Anda puas?"
+        'review_text', // Ulasan teks
+        'rating',      // Bintang 1-5
+        'media_path',  // Foto/Video (jika ada)
     ];
 
-    protected $casts = [
-        'is_read' => 'boolean',
-    ];
-
-    // Relasi ke User
+    // Relasi ke User (Siapa yang mereview)
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-    
-    // Relasi ke Order (Opsional, jika butuh data order)
+
+    // Relasi ke Order (Review untuk pesanan mana)
     public function order()
     {
         return $this->belongsTo(Order::class);
