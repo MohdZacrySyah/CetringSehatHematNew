@@ -48,7 +48,7 @@
                                     <option value="makanan">Makanan Berat</option>
                                     <option value="minuman">Minuman</option>
                                     <option value="snack">Cemilan / Snack</option>
-                                    <option value="paket_hemat">Paket Hemat</option>
+                                    <option value="makanan_sehat">Makanan Sehat</option>
                                 </select>
                                 <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-500">
                                     <i class="fa-solid fa-chevron-down text-xs"></i>
@@ -79,15 +79,25 @@
                     <div class="space-y-2">
                         <label class="text-sm font-semibold text-gray-700">Foto Menu</label>
                         <div class="w-full">
-                            <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer hover:bg-gray-50 hover:border-[#556B2F] transition-all group">
-                                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                            <label id="drop-area" class="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer hover:bg-gray-50 hover:border-[#556B2F] transition-all group relative overflow-hidden">
+                                
+                                <div id="upload-content" class="flex flex-col items-center justify-center pt-5 pb-6">
                                     <div class="p-3 bg-gray-100 rounded-full mb-3 group-hover:bg-[#f5f7ee] transition-colors">
                                         <i class="fa-solid fa-cloud-arrow-up text-2xl text-gray-400 group-hover:text-[#556B2F]"></i>
                                     </div>
                                     <p class="mb-1 text-sm text-gray-500"><span class="font-semibold text-[#556B2F]">Klik untuk upload</span> atau drag and drop</p>
                                     <p class="text-xs text-gray-400">PNG, JPG, JPEG (Max. 2MB)</p>
                                 </div>
-                                <input type="file" name="image" class="hidden" accept="image/*" />
+
+                                <div id="preview-container" class="absolute inset-0 w-full h-full bg-white hidden flex-col items-center justify-center">
+                                    <img id="image-preview" src="#" alt="Preview" class="h-32 object-contain mb-2 rounded-lg shadow-sm">
+                                    <p class="text-xs text-green-600 font-semibold bg-green-50 px-2 py-1 rounded-full flex items-center gap-1">
+                                        <i class="fa-solid fa-check-circle"></i> Foto Terpilih
+                                    </p>
+                                    <p class="text-[10px] text-gray-400 mt-1">Klik area ini untuk mengganti</p>
+                                </div>
+
+                                <input id="file-input" type="file" name="image" class="hidden" accept="image/*" />
                             </label>
                         </div>
                     </div>
@@ -108,4 +118,73 @@
     </div>
 
 </div>
+
+<script>
+    const dropArea = document.getElementById('drop-area');
+    const fileInput = document.getElementById('file-input');
+    const uploadContent = document.getElementById('upload-content');
+    const previewContainer = document.getElementById('preview-container');
+    const imagePreview = document.getElementById('image-preview');
+
+    // 1. Mencegah aksi default browser (agar tidak membuka file di tab baru)
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    // 2. Efek Visual saat file di-drag ke area (Highlight)
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, () => {
+            dropArea.classList.add('bg-green-50', 'border-[#556B2F]');
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, () => {
+            dropArea.classList.remove('bg-green-50', 'border-[#556B2F]');
+        }, false);
+    });
+
+    // 3. Menangani File yang Di-drop
+    dropArea.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length > 0) {
+            fileInput.files = files; // Memasukkan file drop ke input form
+            handleFiles(files);      // Tampilkan preview
+        }
+    }
+
+    // 4. Menangani File yang Dipilih lewat Klik
+    fileInput.addEventListener('change', function() {
+        handleFiles(this.files);
+    });
+
+    // 5. Fungsi Menampilkan Preview Gambar
+    function handleFiles(files) {
+        if (files.length > 0) {
+            const file = files[0];
+            // Validasi apakah file adalah gambar
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    uploadContent.classList.add('hidden'); // Sembunyikan icon upload
+                    previewContainer.classList.remove('hidden'); // Munculkan preview
+                    previewContainer.classList.add('flex');
+                }
+                reader.readAsDataURL(file);
+            } else {
+                alert("Mohon upload file gambar.");
+            }
+        }
+    }
+</script>
 @endsection

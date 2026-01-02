@@ -1,264 +1,410 @@
 @extends('layouts.app')
+
 @section('title', 'Beranda - Catering Sehat Hemat')
 
 @push('styles')
 <style>
+    /* === GLOBAL & LAYOUT === */
     .main-header {
-        background: #879b55;
-        border-radius: 9px;
-        display: flex;
-        align-items: center;
-        padding: 15px 22px;
-        margin: 25px 3vw 21px 3vw;
+        background: #556B2F; /* Hijau Utama */
+        padding: 20px;
         position: relative;
-        box-shadow: 0 2px 8px #c2d5a032;
-        min-width: 0;
+        z-index: 50;
+        box-shadow: 0 4px 15px rgba(85, 107, 47, 0.1);
     }
+    
+    .header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
     .hamburger-menu {
-        font-size: 1.6rem;
-        color: #fff;
-        cursor: pointer;
-        margin-right: 18px;
-        padding: 5px;
+        color: white;
+        font-size: 1.5rem;
         background: none;
         border: none;
-        line-height: 1;
-        display: flex;
-        align-items: center;
+        cursor: pointer;
     }
+
+    /* === SEARCH BAR === */
     .main-search-container {
-        flex: 1;
         position: relative;
-        max-width: 470px;
-        min-width: 0;
-        margin: 0 auto;
+        max-width: 100%;
     }
+
     .search-input {
         width: 100%;
-        padding: 12px 40px 12px 15px;
+        padding: 14px 48px 14px 20px;
         border: none;
-        border-radius: 20px;
-        background: rgba(255,255,255,0.88);
+        border-radius: 16px;
+        background: white;
         font-size: 1rem;
+        color: #333;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         outline: none;
-        color: #556b2f;
     }
+
     .search-icon {
         position: absolute;
         right: 16px;
         top: 50%;
         transform: translateY(-50%);
         color: #888;
-        font-size: 1.1rem;
+        font-size: 1.2rem;
         pointer-events: none;
     }
-    #suggestionsBox {
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.11);
-        max-height: 300px;
-        overflow-y: auto;
-        width: 95vw;
-        max-width: 490px;
-        margin: 9px auto 0;
-        display: none;
-        z-index: 200;
+
+    /* === HERO SECTION (BANNER) === */
+    .hero-section {
+        background: linear-gradient(180deg, #556B2F 0%, #768d46 100%);
+        padding: 10px 20px 40px 20px;
+        border-radius: 0 0 30px 30px;
+        margin-bottom: 30px;
+        color: white;
         position: relative;
+        overflow: hidden;
     }
-    .suggestion-item {
-        padding: 13px 19px;
+    
+    /* Dekorasi Background */
+    .hero-circle-1 {
+        position: absolute;
+        top: -20px;
+        right: -20px;
+        width: 150px;
+        height: 150px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+    }
+    .hero-circle-2 {
+        position: absolute;
+        bottom: 20px;
+        left: -30px;
+        width: 100px;
+        height: 100px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+    }
+
+    .hero-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+        line-height: 1.3;
+        position: relative;
+        z-index: 10;
+    }
+    .hero-subtitle {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        position: relative;
+        z-index: 10;
+        max-width: 80%;
+    }
+
+    /* === HORIZONTAL SCROLL (PILIHAN SEHAT) === */
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 20px;
+        margin-bottom: 16px;
+    }
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1f2937;
+    }
+    .see-all {
+        font-size: 0.85rem;
+        color: #556B2F;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .horizontal-scroll-wrapper {
+        display: flex;
+        overflow-x: auto;
+        padding: 0 20px 20px 20px;
+        gap: 16px;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+    }
+    /* Hide scrollbar */
+    .horizontal-scroll-wrapper::-webkit-scrollbar { display: none; }
+    
+    .card-sehat {
+        min-width: 160px;
+        width: 160px;
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        scroll-snap-align: center;
+        border: 1px solid #f0f0f0;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .card-sehat img {
+        width: 100%;
+        height: 110px;
+        object-fit: cover;
+    }
+    
+    .card-sehat-content {
+        padding: 12px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .card-sehat h4 {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #333;
+        margin: 0 0 4px 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .card-sehat p {
+        font-size: 0.85rem;
+        color: #556B2F;
+        font-weight: 600;
+        margin: 0 0 10px 0;
+    }
+    
+    .btn-add-mini {
+        margin-top: auto;
+        width: 100%;
+        background: #556B2F;
+        color: white;
+        border: none;
+        padding: 8px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
         cursor: pointer;
-        border-bottom: 1px solid #e3e6d8;
-        color: #4A572A;
         display: flex;
         align-items: center;
+        justify-content: center;
+        gap: 6px;
         transition: background 0.2s;
     }
-    .suggestion-item:hover { background: #f7fbe7; }
-    .suggestion-item:last-child {border-bottom: none;}
-    .suggestion-item i { margin-right: 12px; color: #879b55; font-size: 1.13rem;}
+    .btn-add-mini:hover { background: #435725; }
 
-    #searchResultWrapper {
-        display: flex; flex-direction: column; align-items: center; min-height: 300px; display: none;
+    /* === GRID MENU (REKOMENDASI) === */
+    .menu-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        padding: 0 20px 40px 20px;
     }
-    #searchResultWrapper.show {display: flex;}
-    .search-result-card {
-        background: white;
-        border-radius: 15px;
-        padding: 20px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.11);
-        width: 92vw;
-        max-width: 330px;
-        text-align: center;
-    }
-    .search-result-card img {
-        width: 100%; height: 185px; border-radius: 12px; object-fit: cover; margin-bottom: 14px; border: 4px solid #f8f8f8;
-    }
-    .search-result-card h4 { margin: 0 0 7px 0; font-size: 1.13rem; color: #4A572A; }
-    .search-result-card p { margin: 0 0 15px 0; color: #879b55; font-weight: bold; font-size: 1.1rem;}
-    .search-result-card button {
-        background: #879b55; border: none; color: #fff;
-        font-weight: bold; border-radius: 10px;
-        padding: 10px 26px; font-size: .99rem;
-        cursor: pointer; width: 100%;
-    }
-    .search-result-card button:hover { background: #556b2f; }
-
-    .menu-list-area {
-        display: flex; flex-direction: column;
-        gap: 18px; max-width: 680px; margin: 0 auto; padding: 0 2vw 22px 2vw;
-        width: 100%;
-        min-width: 0;
-    }
-    .menu-card {
-        background: #e0e9cf;
-        display: flex; align-items: center;
-        border-radius: 12px; box-shadow: 0 2px 8px #879b5520;
-        padding: 12px 16px; transition: background 0.2s;
-        min-width: 0;
-        gap: 14px;
-        /* Tambahkan relative agar link bisa diatur */
-        position: relative;
-    }
-    .menu-card:hover { background: #c2d5a0; }
     
-    /* Link Wrapper untuk area klik */
-    .menu-link-wrapper {
+    .card-menu {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        border: 1px solid #f0f0f0;
+        transition: transform 0.2s;
+        position: relative; /* Untuk badge kategori */
+    }
+    .card-menu:hover { transform: translateY(-3px); }
+    
+    .card-menu img {
+        width: 100%;
+        height: 130px;
+        object-fit: cover;
+    }
+    
+    .card-menu-content {
+        padding: 12px;
+    }
+    
+    .card-menu h3 {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #333;
+        margin: 0 0 4px 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    .card-menu .desc {
+        font-size: 0.75rem;
+        color: #888;
+        margin-bottom: 12px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        height: 2.4em; /* Fixed height for alignment */
+    }
+    
+    .card-menu-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .price-tag {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #556B2F;
+    }
+    
+    .btn-add-circle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #f0fdf4;
+        color: #556B2F;
+        border: none;
         display: flex;
         align-items: center;
-        gap: 14px;
-        flex: 1;
-        text-decoration: none;
-        color: inherit;
-        min-width: 0; /* Fix flex overflow */
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .btn-add-circle:hover {
+        background: #556B2F;
+        color: white;
     }
 
-    .menu-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
-    .menu-info { flex: 1; min-width: 0;}
-    .menu-title { font-size: 1.1rem; color: #3d4621; font-weight: 650; margin-bottom: 4px; white-space:nowrap; overflow: hidden; text-overflow: ellipsis;}
-    .menu-price { font-size: .99rem; color: #556B2F; }
+    /* Badge Kategori di Grid (Opsional, agar user tau kategorinya) */
+    .category-badge-small {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 4px 8px;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #556B2F;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* === SEARCH SUGGESTIONS === */
+    #suggestionsBox {
+        position: absolute;
+        top: 130px; /* Adjust based on header+hero height approx */
+        left: 20px;
+        right: 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        z-index: 100;
+        display: none;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    .suggestion-item {
+        padding: 12px 16px;
+        border-bottom: 1px solid #f0f0f0;
+        color: #333;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .suggestion-item:last-child { border-bottom: none; }
+    .suggestion-item:hover { background: #f9fafb; }
     
-    .menu-action button {
-        background: #879b55; border: none; color: #fff;
-        font-weight: bold; border-radius: 10px;
-        padding: 9px 18px; font-size: 0.98rem;
-        cursor: pointer; transition: background 0.2s;
-        min-width: 75px;
-        /* Pastikan tombol di atas link */
-        z-index: 2; 
-        position: relative;
+    .suggestion-cat {
+        font-size: 0.75rem;
+        color: #888;
+        margin-left: auto;
+        background: #f3f4f6;
+        padding: 2px 6px;
+        border-radius: 4px;
     }
-    .menu-action button:hover { background: #556b2f; }
 
+    /* === SEARCH RESULT CARD === */
+    #searchResultWrapper {
+        display: none;
+        padding: 20px;
+        justify-content: center;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+    #searchResultWrapper.show { display: flex; }
+    
+    .result-card {
+        background: white;
+        border-radius: 20px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 300px;
+    }
+    .result-card img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        border-radius: 12px;
+        margin-bottom: 16px;
+    }
+    .result-card h4 {
+        font-size: 1.2rem;
+        color: #333;
+        margin-bottom: 8px;
+    }
+    .result-card p {
+        font-size: 1.1rem;
+        color: #556B2F;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+    .result-card button {
+        width: 100%;
+        padding: 12px;
+        background: #556B2F;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    /* === TOAST === */
     .toast-show {
         position: fixed;
         top: 25px;
         left: 50%;
         transform: translateX(-50%);
-        background: #4A572A;
+        background: #333;
         color: #fff;
-        padding: 14px 35px;
-        border-radius: 12px;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.09);
-        font-size: 1.09rem;
+        padding: 12px 24px;
+        border-radius: 50px;
+        font-size: 0.9rem;
         z-index: 9999;
-        animation: fadeToast 0.5s, hideToast 3s 1s forwards;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        animation: fadeToast 0.5s, hideToast 0.5s 3s forwards;
     }
-    @keyframes fadeToast { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes hideToast { to { opacity: 0; top: 0px; } }
+    @keyframes fadeToast { from { opacity: 0; transform: translate(-50%, -20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+    @keyframes hideToast { to { opacity: 0; transform: translate(-50%, -20px); } }
 
-    /* GRID PAKET HEMAT */
-    #paketHematWrapper {
-        padding-top: 10px;
+    /* Responsive */
+    @media (min-width: 768px) {
+        .menu-grid { grid-template-columns: repeat(3, 1fr); }
     }
-    #paketHematWrapper h3{
-        text-align:center;
-        margin:15px 0 25px 0;
-        color:#3d4621;
-        font-weight:700;
-    }
-
-    .paket-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 130px);
-        gap: 18px 20px;
-        justify-content: center;
-        padding-bottom: 40px;
-    }
-    .paket-card{
-        background:#e0e9cf;
-        border-radius:15px;
-        box-shadow:0 2px 8px #879b5520;
-        overflow:hidden;
-        width:130px;
-        display: flex;
-        flex-direction: column;
-    }
-    /* Link wrapper untuk paket */
-    .paket-link {
-        text-decoration: none;
-        color: inherit;
-        display: block;
-    }
-    .paket-card img{
-        width:100%;
-        height:90px;
-        object-fit:cover;
-    }
-    .paket-info{
-        padding:6px 8px 10px 8px;
-        text-align:left;
-    }
-    .paket-info h6{
-        font-size:.74rem;
-        font-weight:600;
-        color:#3d4621;
-        margin:0 0 4px 0;
-    }
-    .paket-info p{
-        color:#556B2F;
-        font-weight:600;
-        font-size:.75rem;
-        margin:0 0 6px 0;
-    }
-    .paket-info button{
-        width:100%;
-        border:none;
-        border-radius:8px;
-        background:#879b55;
-        color:#fff;
-        font-size:.75rem;
-        font-weight:600;
-        padding:5px 0;
-        cursor:pointer;
-    }
-    .paket-info button:hover{
-        background:#556b2f;
-    }
-
-    @media (max-width:990px){
-        .main-header, .menu-list-area {max-width: 97vw;}
-    }
-    @media (max-width:660px){
-        .main-header {margin-left:4px; margin-right:4px; padding: 10px 7px;}
-        .main-search-container {max-width: 98vw;}
-        .menu-list-area {padding-left: 1.5vw; padding-right: 1.5vw;}
-        .menu-card {gap: 8px;}
-    }
-    @media (max-width:600px){
-        .paket-grid{
-            grid-template-columns: repeat(2,130px);
-        }
-    }
-    @media (max-width:500px){
-        .main-header {padding: 7px 4px;}
-        .menu-thumb {width: 46px; height: 46px;}
-        .menu-card {padding: 8px 6px;}
+    @media (min-width: 1024px) {
+        .menu-grid { grid-template-columns: repeat(4, 1fr); }
     }
 </style>
 @endpush
 
 @section('content')
+
 @if(session('success'))
 <div id="toast-notification" class="toast-show">
     {{ session('success') }}
@@ -266,88 +412,114 @@
 @endif
 
 <div class="main-header">
-    <button class="hamburger-menu" onclick="openSidebar()" type="button">
-        <i class="fa-solid fa-bars"></i>
-    </button>
+    <div class="header-top">
+        <button class="hamburger-menu" onclick="openSidebar()" type="button">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+        <div style="color: white; font-weight: bold; font-size: 1.1rem;">Catering Sehat</div>
+        <div style="width: 24px;"></div> </div>
+
     <div class="main-search-container">
-        <input type="text" class="search-input" placeholder="Pilih Menu Makanan" id="searchInput"
+        <input type="text" class="search-input" placeholder="Cari menu, snack, atau sehat..." id="searchInput"
                onfocus="showSearchSuggestions()" oninput="liveSearch()">
-        <span class="search-icon">
-            <i class="fa-solid fa-magnifying-glass"></i>
-        </span>
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
     </div>
 </div>
 
 <div id="suggestionsBox"></div>
 
-<div id="searchResultWrapper">
-    <div id="singleResultArea"></div>
+<div class="hero-section">
+    <div class="hero-circle-1"></div>
+    <div class="hero-circle-2"></div>
+    
+    <div class="hero-title">
+        Nikmati Makanan<br>Sehat & Hemat
+    </div>
+    <div class="hero-subtitle">
+        Pesan katering harian tanpa ribet, langsung antar ke tempatmu.
+    </div>
 </div>
 
-{{-- GRID PAKET HEMAT SEHAT --}}
-<div id="paketHematWrapper" style="display:none;">
-    <h3>Paket Makanan Sehat Mu!</h3>
-    <div class="paket-grid">
-        @foreach(($paketHemat ?? collect()) as $menu)
-            <div class="paket-card">
-                {{-- WRAPPER LINK KE DETAIL MENU --}}
-                <a href="{{ route('menu.detail', $menu->id) }}" class="paket-link">
-                    <img src="{{ asset('storage/' . $menu->image) }}" alt="{{ $menu->name }}">
-                </a>
+<div id="searchResultWrapper">
+    </div>
+
+<div id="defaultContent">
+    
+    @if(isset($makananSehat) && $makananSehat->count() > 0)
+    <div class="section-header">
+        <span class="section-title">Pilihan Sehat 🥗</span>
+        <a href="{{ url('/menu') }}" class="see-all">Lihat Semua</a>
+    </div>
+
+    <div class="horizontal-scroll-wrapper">
+        @foreach($makananSehat as $item)
+        <div class="card-sehat">
+            <a href="{{ route('menu.detail', $item->id) }}">
+                <img src="{{ asset('storage/' . $item->image) }}" alt="{{ $item->name }}">
+            </a>
+            <div class="card-sehat-content">
+                <h4>{{ $item->name }}</h4>
+                <p>Rp {{ number_format($item->price, 0, ',', '.') }}</p>
                 
-                <div class="paket-info">
-                    <a href="{{ route('menu.detail', $menu->id) }}" class="paket-link">
-                        <h6>{{ $menu->name }}</h6>
-                    </a>
-                    <p>Rp. {{ number_format($menu->price, 0, ',', '.') }}</p>
+                <form action="{{ route('cart.add') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="id" value="{{ $item->id }}">
+                    <input type="hidden" name="name" value="{{ $item->name }}">
+                    <input type="hidden" name="price" value="{{ $item->price }}">
+                    <input type="hidden" name="image" value="{{ asset('storage/' . $item->image) }}">
+                    <button type="submit" class="btn-add-mini">
+                        <i class="fa-solid fa-plus"></i> Pesan
+                    </button>
+                </form>
+            </div>
+        </div>
+        @endforeach
+    </div>
+    @endif
+
+    <div class="section-header" style="margin-top: 30px;">
+        <span class="section-title">Rekomendasi Lainnya 🔥</span>
+    </div>
+
+    <div class="menu-grid">
+        @foreach($menus as $menu)
+        <div class="card-menu"
+             data-id="{{ $menu->id }}"
+             data-name="{{ $menu->name }}"
+             data-price="{{ $menu->price }}"
+             data-image="{{ asset('storage/' . $menu->image) }}"
+             data-category="{{ $menu->category }}"> <a href="{{ route('menu.detail', $menu->id) }}">
+                <div class="category-badge-small">{{ ucfirst(str_replace('_', ' ', $menu->category)) }}</div>
+                <img src="{{ asset('storage/' . $menu->image) }}" alt="{{ $menu->name }}">
+            </a>
+            
+            <div class="card-menu-content">
+                <a href="{{ route('menu.detail', $menu->id) }}" style="text-decoration:none;">
+                    <h3>{{ $menu->name }}</h3>
+                </a>
+                <div class="desc">{{ $menu->description ?? 'Rasa otentik yang lezat.' }}</div>
+                
+                <div class="card-menu-footer">
+                    <span class="price-tag">Rp {{ number_format($menu->price, 0, ',', '.') }}</span>
                     
-                    {{-- Form Tambah ke Keranjang (Tanpa Link) --}}
                     <form action="{{ route('cart.add') }}" method="POST">
                         @csrf
                         <input type="hidden" name="id" value="{{ $menu->id }}">
                         <input type="hidden" name="name" value="{{ $menu->name }}">
                         <input type="hidden" name="price" value="{{ $menu->price }}">
                         <input type="hidden" name="image" value="{{ asset('storage/' . $menu->image) }}">
-                        <button type="submit">Tambah</button>
+                        <button type="submit" class="btn-add-circle">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
                     </form>
                 </div>
             </div>
+        </div>
         @endforeach
     </div>
+
 </div>
 
-{{-- LIST MENU NORMAL --}}
-<div class="menu-list-area" id="menuListNormal">
-    @foreach($menus as $menu)
-    <div class="menu-card"
-         data-id="{{ $menu->id }}"
-         data-name="{{ $menu->name }}"
-         data-price="{{ $menu->price }}"
-         data-image="{{ asset('storage/' . $menu->image) }}">
-         
-        {{-- WRAPPER LINK KE DETAIL MENU (Membungkus Gambar & Info) --}}
-        <a href="{{ route('menu.detail', $menu->id) }}" class="menu-link-wrapper">
-            <img class="menu-thumb" src="{{ asset('storage/' . $menu->image) }}" alt="{{ $menu->name }}">
-            <div class="menu-info">
-                <div class="menu-title">{{ $menu->name }}</div>
-                <div class="menu-price">RP. {{ number_format($menu->price, 0, ',', '.') }}</div>
-            </div>
-        </a>
-
-        {{-- Tombol Aksi (Di luar Link) --}}
-        <div class="menu-action">
-            <form action="{{ route('cart.add') }}" method="POST">
-                @csrf
-                <input type="hidden" name="id" value="{{ $menu->id }}">
-                <input type="hidden" name="name" value="{{ $menu->name }}">
-                <input type="hidden" name="price" value="{{ $menu->price }}">
-                <input type="hidden" name="image" value="{{ asset('storage/' . $menu->image) }}">
-                <button type="submit">Tambah</button>
-            </form>
-        </div>
-    </div>
-    @endforeach
-</div>
 @endsection
 
 @push('scripts')
@@ -355,51 +527,32 @@
     let PRODUCTS = [];
 
     document.addEventListener('DOMContentLoaded', function() {
-        const menuItems = document.querySelectorAll('.menu-card');
+        // Ambil data produk termasuk KATEGORI dari DOM
+        const menuItems = document.querySelectorAll('.card-menu');
         PRODUCTS = Array.from(menuItems).map(item => ({
             id: item.dataset.id,
             name: item.dataset.name,
             price: item.dataset.price,
             image: item.dataset.image,
+            category: item.dataset.category || '' // Ambil kategori
         }));
 
+        // Toast Notification Auto Hide
         const toast = document.getElementById('toast-notification');
         if (toast) {
-            setTimeout(function(){ toast.classList.remove('toast-show'); }, 3000);
             setTimeout(function(){ toast.style.display = 'none'; }, 3500);
         }
     });
 
+    // === LOGIC SEARCH ===
     function showSearchSuggestions() {
+        const input = document.getElementById('searchInput');
         const suggestionsBox = document.getElementById('suggestionsBox');
-        const searchInput = document.getElementById('searchInput');
-        const menuListNormal = document.getElementById('menuListNormal');
-        const searchResultWrapper = document.getElementById('searchResultWrapper');
-        const paketHematWrapper = document.getElementById('paketHematWrapper');
-
-        menuListNormal.style.display = 'none';
-        searchResultWrapper.classList.remove('show');
-        paketHematWrapper.style.display = 'none';
-
-        if (searchInput.value.length === 0 && PRODUCTS.length > 0) {
+        
+        // Jika input kosong, tampilkan semua produk sebagai saran
+        if (input.value.trim() === '') {
+            renderSuggestions(PRODUCTS);
             suggestionsBox.style.display = 'block';
-            suggestionsBox.innerHTML = '';
-
-            // semua menu biasa
-            PRODUCTS.forEach(product => {
-                const suggestion = document.createElement('div');
-                suggestion.className = 'suggestion-item';
-                suggestion.innerHTML = `<i class="fa-regular fa-circle"></i> ${product.name}`;
-                suggestion.onclick = () => selectResult(product);
-                suggestionsBox.appendChild(suggestion);
-            });
-
-            // item paling bawah: Paket Hemat Sehat
-            const paketItem = document.createElement('div');
-            paketItem.className = 'suggestion-item';
-            paketItem.innerHTML = `<i class="fa-regular fa-circle"></i> Paket Hemat Sehat`;
-            paketItem.onclick = () => showPaketHemat();
-            suggestionsBox.appendChild(paketItem);
         }
     }
 
@@ -407,116 +560,114 @@
         const input = document.getElementById('searchInput');
         const filter = input.value.toUpperCase();
         const suggestionsBox = document.getElementById('suggestionsBox');
-        const menuListNormal = document.getElementById('menuListNormal');
+        const defaultContent = document.getElementById('defaultContent');
         const searchResultWrapper = document.getElementById('searchResultWrapper');
-        const paketHematWrapper = document.getElementById('paketHematWrapper');
+        const heroSection = document.querySelector('.hero-section');
 
+        // Jika input kosong, kembalikan ke tampilan awal
         if (filter.length === 0) {
-            showSearchSuggestions();
+            suggestionsBox.style.display = 'block';
+            renderSuggestions(PRODUCTS); 
+            defaultContent.style.display = 'block';
+            heroSection.style.display = 'block';
+            searchResultWrapper.classList.remove('show');
             return;
         }
 
-        menuListNormal.style.display = 'none';
+        // Sembunyikan konten default & hero saat mengetik
+        defaultContent.style.display = 'none';
+        heroSection.style.display = 'none';
         searchResultWrapper.classList.remove('show');
-        paketHematWrapper.style.display = 'none';
 
-        const matches = PRODUCTS.filter(product =>
-            product.name.toUpperCase().includes(filter)
+        // LOGIC PENCARIAN (NAMA ATAU KATEGORI)
+        const matches = PRODUCTS.filter(product => 
+            product.name.toUpperCase().includes(filter) || 
+            product.category.toUpperCase().includes(filter)
         );
 
-        suggestionsBox.style.display = 'block';
-        suggestionsBox.innerHTML = '';
-
         if (matches.length > 0) {
-            matches.forEach(product => {
-                const suggestion = document.createElement('div');
-                suggestion.className = 'suggestion-item';
-                suggestion.innerHTML = `<i class="fa-regular fa-circle"></i> ${product.name}`;
-                suggestion.onclick = () => selectResult(product);
-                suggestionsBox.appendChild(suggestion);
-            });
-        }
-
-        const keyword = filter.trim();
-        if (keyword.includes('PAKET') || keyword.includes('HEMAT')) {
-            const paketItem = document.createElement('div');
-            paketItem.className = 'suggestion-item';
-            paketItem.innerHTML = `<i class="fa-regular fa-circle"></i> Paket Hemat Sehat`;
-            paketItem.onclick = () => showPaketHemat();
-            suggestionsBox.appendChild(paketItem);
-        }
-
-        if (matches.length === 0 && !(keyword.includes('PAKET') || keyword.includes('HEMAT'))) {
-            suggestionsBox.innerHTML = `
-                <div class="suggestion-item" style="justify-content:center;color:#ab3d36;">
-                    <i class="fa-solid fa-circle-exclamation" style="margin-right:8px;"></i> Menu tidak tersedia
-                </div>
-            `;
+            renderSuggestions(matches);
+            suggestionsBox.style.display = 'block';
+        } else {
+            suggestionsBox.style.display = 'block';
+            suggestionsBox.innerHTML = `<div class="suggestion-item" style="color:red; justify-content:center;">Menu tidak ditemukan</div>`;
         }
     }
 
-    function showPaketHemat() {
-        const suggestionsBox = document.getElementById('suggestionsBox');
-        const menuListNormal = document.getElementById('menuListNormal');
-        const searchResultWrapper = document.getElementById('searchResultWrapper');
-        const paketHematWrapper = document.getElementById('paketHematWrapper');
-        const searchInput = document.getElementById('searchInput');
-
-        searchInput.value = 'Paket Hemat Sehat';
-        suggestionsBox.style.display = 'none';
-        menuListNormal.style.display = 'none';
-        searchResultWrapper.classList.remove('show');
-        paketHematWrapper.style.display = 'block';
+    function renderSuggestions(items) {
+        const box = document.getElementById('suggestionsBox');
+        box.innerHTML = '';
+        items.forEach(product => {
+            const div = document.createElement('div');
+            div.className = 'suggestion-item';
+            // Tampilkan Nama Menu dan Kategorinya (Kecil di kanan)
+            div.innerHTML = `
+                <div style="display:flex; align-items:center; gap:8px; width:100%">
+                    <i class="fa-solid fa-utensils text-gray-400"></i> 
+                    <span>${product.name}</span>
+                    <span class="suggestion-cat">${product.category.replace('_',' ')}</span>
+                </div>
+            `;
+            div.onclick = () => selectResult(product);
+            box.appendChild(div);
+        });
     }
 
     function selectResult(product) {
         const suggestionsBox = document.getElementById('suggestionsBox');
-        const singleResultArea = document.getElementById('singleResultArea');
-        const searchInput = document.getElementById('searchInput');
-        const menuListNormal = document.getElementById('menuListNormal');
         const searchResultWrapper = document.getElementById('searchResultWrapper');
-        const paketHematWrapper = document.getElementById('paketHematWrapper');
+        const searchInput = document.getElementById('searchInput');
+        const heroSection = document.querySelector('.hero-section');
 
-        suggestionsBox.style.display = 'none';
-        menuListNormal.style.display = 'none';
-        paketHematWrapper.style.display = 'none';
+        // Isi input dengan nama yang dipilih
         searchInput.value = product.name;
-        searchResultWrapper.classList.add('show');
+        
+        // Sembunyikan saran & konten default & hero
+        suggestionsBox.style.display = 'none';
+        document.getElementById('defaultContent').style.display = 'none';
+        heroSection.style.display = 'none';
 
-        // UPDATE JS: Tambahkan Link pada Gambar Hasil Pencarian
-        singleResultArea.innerHTML = `
-            <div class="search-result-card">
+        // Tampilkan Kartu Hasil Pencarian
+        searchResultWrapper.classList.add('show');
+        searchResultWrapper.innerHTML = `
+            <div class="result-card">
                 <a href="/menu/${product.id}">
                     <img src="${product.image}" alt="${product.name}">
                 </a>
                 <h4>${product.name}</h4>
-                <p>RP. ${parseInt(product.price).toLocaleString('id-ID')}</p>
+                <p>Rp ${parseInt(product.price).toLocaleString('id-ID')}</p>
+                <div style="margin-bottom:15px;">
+                    <span style="background:#f3f4f6; color:#666; padding:4px 10px; border-radius:10px; font-size:0.8rem;">
+                        Kategori: ${product.category.replace('_',' ').toUpperCase()}
+                    </span>
+                </div>
+                
                 <form action="{{ route('cart.add') }}" method="POST">
                     @csrf
                     <input type="hidden" name="id" value="${product.id}">
                     <input type="hidden" name="name" value="${product.name}">
                     <input type="hidden" name="price" value="${product.price}">
                     <input type="hidden" name="image" value="${product.image}">
-                    <button type="submit">Tambah</button>
+                    <button type="submit">Tambah ke Keranjang</button>
                 </form>
             </div>
         `;
     }
 
+    // Tutup suggestions jika klik di luar
     document.addEventListener('click', function(e) {
-        const searchInput = document.getElementById('searchInput');
-        const suggestionsBox = document.getElementById('suggestionsBox');
-        const searchContainer = document.querySelector('.main-search-container');
-        const menuListNormal = document.getElementById('menuListNormal');
-        const searchResultWrapper = document.getElementById('searchResultWrapper');
-        const paketHematWrapper = document.getElementById('paketHematWrapper');
-
-        if (!searchContainer.contains(e.target) && !suggestionsBox.contains(e.target)) {
-            if (searchInput.value.length === 0) {
-                suggestionsBox.style.display = 'none';
-                menuListNormal.style.display = 'flex';
-                searchResultWrapper.classList.remove('show');
-                paketHematWrapper.style.display = 'none';
+        const container = document.querySelector('.main-header');
+        const box = document.getElementById('suggestionsBox');
+        const input = document.getElementById('searchInput');
+        const heroSection = document.querySelector('.hero-section');
+        
+        if (!container.contains(e.target) && !box.contains(e.target)) {
+            box.style.display = 'none';
+            // Jika input kosong, kembalikan tampilan default
+            if(input.value === '') {
+                document.getElementById('defaultContent').style.display = 'block';
+                heroSection.style.display = 'block';
+                document.getElementById('searchResultWrapper').classList.remove('show');
             }
         }
     });

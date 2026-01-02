@@ -4,174 +4,196 @@
 
 @push('styles')
 <style>
-    /* UTAMA: Wrapper ini menutupi SELURUH layar termasuk navbar bawah layout */
-    .detail-wrapper {
-        background-color: #ffffff;
-        position: fixed; /* Mengunci posisi agar menutupi layout utama */
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 2000; /* Layer sangat tinggi agar di atas Navbar Hijau */
-        overflow-y: auto; /* Agar konten tetap bisa di-scroll */
-        padding-bottom: 100px; /* Memberi ruang agar konten terakhir tidak ketutupan tombol */
-    }
-
-    /* 1. Header Hijau Besar */
-    .hero-header {
-        background-color: #8c9e5e; 
-        height: 200px;
-        position: relative;
-        padding: 20px;
-        border-bottom-left-radius: 25px;
-        border-bottom-right-radius: 25px;
+    /* === HACK: PAKSA SEMBUNYIKAN ELEMENT LAYOUT UTAMA === */
+    /* Ini memastikan navbar/header bawaan layout tidak bocor ke tampilan detail */
+    nav, header, aside, .main-header, .bottom-nav {
+        display: none !important;
+        z-index: -1 !important;
     }
     
-    .back-btn {
-        color: white;
-        font-size: 1.5rem;
-        background: rgba(255,255,255,0.2);
-        width: 45px;
-        height: 45px;
-        border-radius: 50%;
+    /* === WRAPPER UTAMA === */
+    .detail-wrapper {
+        background-color: #ffffff; /* Background Putih Solid untuk menutupi teks bocor */
+        position: fixed;
+        inset: 0; /* Menutupi seluruh layar */
+        z-index: 99999; /* Layer Tertinggi */
+        overflow-y: auto; /* Aktifkan scroll */
+        padding-bottom: 120px; /* Ruang untuk footer */
         display: flex;
-        align-items: center;
-        justify-content: center;
-        text-decoration: none;
-        backdrop-filter: blur(5px);
-        position: relative;
-        z-index: 2002; /* Agar tombol back selalu bisa diklik */
+        flex-direction: column;
+        -webkit-overflow-scrolling: touch;
     }
 
-    /* 2. Gambar Menu */
-    .menu-image-container {
-        margin-top: -120px; 
-        text-align: center;
-        padding: 0 20px;
+    /* === 1. HERO SECTION (GAMBAR) === */
+    .hero-section {
         position: relative;
-        z-index: 2;
+        width: 100%;
+        height: 380px; 
+        background-color: #e5e7eb;
+        flex-shrink: 0;
     }
-    .menu-img-detail {
-        width: 220px; 
-        height: 220px;
+    .hero-img {
+        width: 100%;
+        height: 100%;
         object-fit: cover;
-        border-radius: 50%; 
-        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-        background-color: #fff;
-        border: 5px solid #fff;
+    }
+    .hero-gradient {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 150px;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
+        z-index: 1;
+        pointer-events: none;
     }
 
-    /* 3. Info Produk */
-    .product-info {
-        padding: 20px;
-        text-align: left;
+    /* === NAVIGASI ATAS (BACK BUTTON) === */
+    .top-nav {
+        position: absolute;
+        top: 20px; 
+        left: 20px;
+        z-index: 100;
+        padding-top: env(safe-area-inset-top, 20px); 
     }
-    .menu-name {
-        font-size: 1.5rem;
+    .back-btn {
+        width: 45px; height: 45px;
+        background: rgba(255,255,255,0.2);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        color: white; 
+        font-size: 1.2rem;
+        text-decoration: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        transition: transform 0.2s;
+    }
+    .back-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.4); }
+
+    /* === 2. CONTENT CARD (KARTU PUTIH) === */
+    .content-card {
+        background: white;
+        border-radius: 35px 35px 0 0;
+        margin-top: -50px; 
+        position: relative;
+        z-index: 10;
+        padding: 30px 25px;
+        box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
+        min-height: 500px;
+        flex: 1;
+    }
+
+    /* Judul & Info */
+    .badge-category {
+        display: inline-block;
+        background: #eef5e0;
+        color: #556B2F;
+        font-size: 0.75rem;
         font-weight: 700;
-        color: #222;
-        margin-bottom: 5px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
     }
-    .menu-price {
-        font-size: 1.3rem;
-        font-weight: 600;
-        color: #222;
+    .menu-title {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #1f2937;
+        line-height: 1.2;
         margin-bottom: 10px;
     }
-    .rating-mini {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.9rem;
-        color: #555;
+    
+    .rating-row {
+        display: flex; align-items: center; gap: 8px;
+        margin-bottom: 25px;
+        font-size: 0.95rem;
+        color: #6b7280;
     }
-    .store-badge {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-top: 15px;
-        padding: 10px;
-        background: #f8f9fa;
-        border-radius: 12px;
-        border: 1px solid #eee;
+    .stars { color: #f59e0b; display: flex; gap: 2px; }
+    .dot { width: 4px; height: 4px; background: #d1d5db; border-radius: 50%; }
+
+    /* Harga */
+    .price-block {
+        display: flex; justify-content: space-between; align-items: flex-end;
+        padding-bottom: 25px;
+        border-bottom: 2px dashed #f3f4f6;
+        margin-bottom: 25px;
+    }
+    .price-label { font-size: 0.85rem; color: #9ca3af; margin-bottom: 4px; }
+    .price-value { font-size: 2rem; font-weight: 800; color: #556B2F; line-height: 1; }
+    .status-available { 
+        display: flex; align-items: center; gap: 6px; 
+        font-size: 0.85rem; font-weight: 600; color: #16a34a; 
+        background: #dcfce7; padding: 6px 12px; border-radius: 20px;
     }
 
-    /* 4. Bagian Ulasan */
-    .review-section {
-        padding: 0 20px 20px 20px;
-        margin-top: 10px;
-        border-top: 8px solid #f5f5f5; 
-        padding-top: 20px;
+    /* Deskripsi */
+    .section-title { font-size: 1.1rem; font-weight: 700; color: #111; margin-bottom: 12px; }
+    .desc-text {
+        font-size: 0.95rem;
+        color: #4b5563;
+        line-height: 1.7;
+        margin-bottom: 40px;
     }
-    .review-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 15px;
-    }
-    .big-score {
-        font-size: 3rem;
-        font-weight: 800;
-        color: #333;
-        line-height: 1;
+
+    /* === 3. REVIEW SECTION === */
+    .review-container {
+        background: #f9fafb;
+        margin: 0 -25px; 
+        padding: 30px 25px;
+        border-top: 1px solid #f3f4f6;
     }
     
-    .bar-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 5px;
-        font-size: 0.85rem;
-        color: #666;
+    .review-item {
+        background: white;
+        padding: 18px;
+        border-radius: 16px;
+        border: 1px solid #eee;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.02);
     }
-    .progress-track {
-        flex: 1;
-        height: 8px;
-        background-color: #e9ecef;
-        border-radius: 10px;
-        overflow: hidden;
+    .user-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 10px;
     }
-    .progress-fill {
-        height: 100%;
-        background-color: #28a745; 
-        border-radius: 10px;
+    .user-info { display: flex; align-items: center; gap: 10px; }
+    .user-avatar { 
+        width: 38px; height: 38px; border-radius: 50%; 
+        object-fit: cover; background: #e5e7eb; border: 2px solid white; 
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
+    .user-name { font-size: 0.9rem; font-weight: 700; color: #111; display: block;}
+    .review-time { font-size: 0.7rem; color: #9ca3af; }
+    
+    .comment-text { font-size: 0.9rem; color: #4b5563; line-height: 1.5; margin-top: 8px;}
+    .comment-highlight { font-weight: 600; color: #1f2937; margin-bottom: 4px; display: block;}
 
-    /* 5. Footer Fixed (Tombol Beli) */
-    .fixed-footer {
+    /* === 4. FIXED FOOTER === */
+    .bottom-bar {
         position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: #fff;
-        padding: 15px 20px;
+        bottom: 0; left: 0; right: 0;
+        background: white;
+        padding: 16px 25px 25px 25px; 
+        box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
         display: flex;
-        gap: 15px;
-        box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
-        z-index: 2001; /* Pastikan di atas Wrapper (2000) dan Navbar Layout */
-        border-top: 1px solid #eee;
+        gap: 12px;
+        z-index: 10000;
+        border-top: 1px solid #f3f4f6;
     }
-    .btn-cart {
+    .btn {
         flex: 1;
-        background-color: #28a745;
-        color: white;
+        padding: 16px;
+        border-radius: 16px;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
         border: none;
-        padding: 14px;
-        border-radius: 10px;
-        font-weight: bold;
-        font-size: 1rem;
-        cursor: pointer;
+        transition: transform 0.1s;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
     }
-    .btn-buy {
-        flex: 1;
-        background-color: #fff;
-        color: #28a745;
-        border: 2px solid #28a745;
-        padding: 14px;
-        border-radius: 10px;
-        font-weight: bold;
-        font-size: 1rem;
-        cursor: pointer;
-    }
+    .btn:active { transform: scale(0.97); }
+    .btn-outline { background: #fff; color: #556B2F; border: 2px solid #556B2F; }
+    .btn-fill { background: #556B2F; color: white; box-shadow: 0 8px 20px rgba(85, 107, 47, 0.25); }
 </style>
 @endpush
 
@@ -179,84 +201,121 @@
 
 <div class="detail-wrapper">
 
-    <div class="hero-header">
-        <a href="{{ route('dashboard') }}" class="back-btn">
-            <i class="fa-solid fa-arrow-left"></i>
-        </a>
-    </div>
-
-    <div class="menu-image-container">
-        @if($menu->image)
-            <img src="{{ asset('storage/' . $menu->image) }}" alt="{{ $menu->name }}" class="menu-img-detail">
-        @else
-            <img src="https://via.placeholder.com/220?text=Menu" class="menu-img-detail">
-        @endif
-    </div>
-
-    <div class="product-info">
-        <h1 class="menu-name">{{ $menu->name }}</h1>
-        <div class="menu-price">Rp {{ number_format($menu->price, 0, ',', '.') }}</div>
+    <div class="hero-section">
+        <div class="hero-gradient"></div>
         
-        <div class="rating-mini">
-            <i class="fa-solid fa-star text-warning"></i>
-            <span style="font-weight:bold; color:#000;">{{ number_format($avgRating, 1) }}</span>
-            <span>• {{ $totalReviews }} ulasan</span> 
+        <div class="top-nav">
+            <a href="{{ route('dashboard') }}" class="back-btn">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
         </div>
 
-        <div class="store-badge">
-            <img src="https://ui-avatars.com/api/?name=Catering+Sehat&background=28a745&color=fff" style="width:40px; height:40px; border-radius:50%;">
-            <div>
-                <div style="font-weight:bold; color:#333;">Catering Sehat Hemat</div>
-                <div style="font-size:0.8rem; color:#28a745;">
-                    <i class="fa-solid fa-check-circle"></i> Terpercaya
-                </div>
-            </div>
-        </div>
+        @php
+            $imagePath = 'https://via.placeholder.com/500x400?text=No+Image';
+            if ($menu->image) {
+                if (Str::startsWith($menu->image, 'http')) {
+                    $imagePath = $menu->image;
+                } elseif (file_exists(public_path('storage/' . $menu->image))) {
+                    $imagePath = asset('storage/' . $menu->image);
+                } elseif (file_exists(public_path($menu->image))) {
+                    $imagePath = asset($menu->image);
+                } else {
+                    $imagePath = asset('storage/' . $menu->image);
+                }
+            }
+        @endphp
+
+        <img src="{{ $imagePath }}" alt="{{ $menu->name }}" class="hero-img">
     </div>
 
-    <div class="review-section">
-        <div class="review-header">
-            <h3 style="font-size:1.2rem; font-weight:bold; margin:0; color:#222;">Ulasan Pelanggan</h3>
-            <a href="#" style="color:#28a745; text-decoration:none; font-weight:bold;">Lihat Semua ></a>
-        </div>
-
-        <div style="display:flex; align-items:flex-start; gap:20px;">
-            <div style="text-align:center;">
-                <div class="big-score">{{ number_format($avgRating, 1) }}</div>
-                <div style="color:#ffc107; font-size:0.9rem;">
-                    @for($i=1; $i<=5; $i++)
-                        <i class="fa-solid fa-star {{ $i <= round($avgRating) ? '' : 'text-muted' }}"></i>
-                    @endfor
-                </div>
-                <div style="font-size:0.75rem; color:#888; margin-top:5px;">{{ $totalReviews }} Rating</div>
-            </div>
-
-            <div style="flex:1;">
-                @for($star=5; $star>=1; $star--)
-                    @php
-                        $count = $starCounts[$star] ?? 0;
-                        $percent = $totalReviews > 0 ? ($count / $totalReviews) * 100 : 0;
-                    @endphp
-                    <div class="bar-row">
-                        <span style="width:10px; font-weight:bold;">{{ $star }}</span>
-                        <div class="progress-track">
-                            <div class="progress-fill" style="width: {{ $percent }}%;"></div>
-                        </div>
-                        <span style="width:25px; text-align:right;">{{ $count }}</span>
-                    </div>
+    <div class="content-card">
+        
+        <span class="badge-category">{{ str_replace('_', ' ', $menu->category ?? 'Umum') }}</span>
+        <h1 class="menu-title">{{ $menu->name }}</h1>
+        
+        <div class="rating-row">
+            <div class="stars">
+                @for($i=1; $i<=5; $i++)
+                    <i class="fa-solid fa-star {{ $i <= round($avgRating) ? '' : 'text-gray-300' }}"></i>
                 @endfor
             </div>
+            <span style="font-weight:700; color:#111;">{{ number_format($avgRating, 1) }}</span>
+            <div class="dot"></div>
+            <span>{{ $totalReviews }} Ulasan</span>
+        </div>
+
+        <div class="price-block">
+            <div>
+                <div class="price-label">Harga Spesial</div>
+                <div class="price-value">Rp {{ number_format($menu->price, 0, ',', '.') }}</div>
+            </div>
+            <div class="status-available">
+                <i class="fa-solid fa-circle-check"></i> Tersedia
+            </div>
+        </div>
+
+        <div class="mb-8">
+            <h3 class="section-title">Deskripsi Menu</h3>
+            <p class="desc-text">
+                {{ $menu->description ?? 'Menu spesial dari Catering Sehat Hemat yang diolah dengan bahan berkualitas tinggi.' }}
+            </p>
+        </div>
+
+        <div class="review-container">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="section-title" style="margin:0;">Ulasan Pelanggan</h3>
+                <span class="text-sm text-gray-500">{{ $totalReviews }} Komentar</span>
+            </div>
+
+            @forelse($menu->reviews as $review)
+                <div class="review-item">
+                    <div class="user-header">
+                        <div class="user-info">
+                            <img src="{{ $review->user->avatar ? asset('storage/'.$review->user->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($review->user->name).'&background=random' }}" 
+                                 class="user-avatar" alt="Avatar">
+                            <div>
+                                <span class="user-name">{{ $review->user->name }}</span>
+                                <span class="review-time">{{ $review->created_at->diffForHumans() }}</span>
+                            </div>
+                        </div>
+                        <div class="stars" style="font-size: 0.8rem;">
+                            @for($i=1; $i<=5; $i++)
+                                <i class="fa-solid fa-star {{ $i <= $review->rating ? '' : 'text-gray-200' }}"></i>
+                            @endfor
+                        </div>
+                    </div>
+
+                    @if($review->question)
+                        <span class="comment-highlight">"{{ $review->question }}"</span>
+                    @endif
+                    <p class="comment-text">{{ $review->review_text }}</p>
+                    
+                    @if($review->media)
+                        <img src="{{ asset('storage/' . $review->media) }}" 
+                             style="width:80px; height:80px; border-radius:10px; margin-top:10px; object-fit:cover;"
+                             onclick="window.open(this.src)">
+                    @endif
+                </div>
+            @empty
+                <div class="text-center py-8 text-gray-400">
+                    <i class="fa-regular fa-face-smile text-3xl mb-2"></i>
+                    <p class="text-sm">Belum ada ulasan.</p>
+                </div>
+            @endforelse
         </div>
     </div>
 
-    <div class="fixed-footer">
+    <div class="bottom-bar">
         <form action="{{ route('cart.add') }}" method="POST" style="flex:1;">
             @csrf
             <input type="hidden" name="id" value="{{ $menu->id }}">
             <input type="hidden" name="name" value="{{ $menu->name }}">
             <input type="hidden" name="price" value="{{ $menu->price }}">
             <input type="hidden" name="image" value="{{ asset('storage/' . $menu->image) }}">
-            <button type="submit" class="btn-cart">+ Keranjang</button>
+            
+            <button type="submit" class="btn btn-outline">
+                <i class="fa-solid fa-cart-plus"></i> + Keranjang
+            </button>
         </form>
 
         <form action="{{ route('cart.add') }}" method="POST" style="flex:1;">
@@ -266,8 +325,13 @@
             <input type="hidden" name="price" value="{{ $menu->price }}">
             <input type="hidden" name="image" value="{{ asset('storage/' . $menu->image) }}">
             <input type="hidden" name="direct_checkout" value="1"> 
-            <button type="submit" class="btn-buy">Beli Sekarang</button>
+            
+            <button type="submit" class="btn btn-fill">
+                Beli Sekarang
+            </button>
         </form>
     </div>
 
-</div> @endsection
+</div>
+
+@endsection

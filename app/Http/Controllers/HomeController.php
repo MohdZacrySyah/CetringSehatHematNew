@@ -7,14 +7,14 @@ use App\Models\Menu;
 
 class HomeController extends Controller
 {
-   public function index()
+  public function index()
     {
-        // menu biasa SAJA (bukan paket hemat)
-        $menus = Menu::where('is_paket_hemat', false)->get();
+        // 1. Ambil Semua Menu (Untuk daftar utama di bawah)
+        $menus = Menu::all();
 
-        // menu paket hemat untuk grid
-        $paketHemat = Menu::where('is_paket_hemat', true)->get();
+        // 2. Ambil Menu Khusus Kategori "Makanan Sehat" (Termasuk support data lama 'paket_hemat')
+        $makananSehat = Menu::whereIn('category', ['makanan_sehat', 'paket_hemat'])->get();
 
-        return view('home', compact('menus', 'paketHemat'));
+        return view('home', compact('menus', 'makananSehat'));
     }
 }

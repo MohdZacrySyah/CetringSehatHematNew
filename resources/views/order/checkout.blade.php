@@ -110,34 +110,9 @@
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <label class="relative cursor-pointer group">
-                        <input type="radio" name="payment_method" value="qris" class="peer sr-only payment-radio" checked>
-                        <div class="p-4 rounded-xl border border-gray-200 hover:border-[#556B2F] transition-all flex items-center gap-4 group-hover:bg-[#f5f7ee]/50 bg-white h-full">
-                            <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                                <i class="fa-solid fa-qrcode text-lg"></i>
-                            </div>
-                            <div>
-                                <div class="font-bold text-gray-800 text-sm">QRIS</div>
-                                <div class="text-[11px] text-gray-500 leading-tight mt-0.5">Scan Barcode (Semua E-Wallet & Bank)</div>
-                            </div>
-                            <i class="fa-solid fa-circle-check absolute top-3 right-3 text-[#556B2F] opacity-0 transition-all check-icon text-lg"></i>
-                        </div>
-                    </label>
+                   
 
-                     <label class="relative cursor-pointer group">
-                        <input type="radio" name="payment_method" value="gopay" class="peer sr-only payment-radio">
-                        <div class="p-4 rounded-xl border border-gray-200 hover:border-[#556B2F] transition-all flex items-center gap-4 group-hover:bg-[#f5f7ee]/50 bg-white h-full">
-                            <div class="w-10 h-10 bg-green-50 text-green-600 rounded-full flex items-center justify-center flex-shrink-0">
-                                <i class="fa-solid fa-wallet text-lg"></i>
-                            </div>
-                             <div>
-                                <div class="font-bold text-gray-800 text-sm">E-Wallet</div>
-                                <div class="text-[11px] text-gray-500 leading-tight mt-0.5">GoPay, Dana, OVO, ShopeePay</div>
-                            </div>
-                             <i class="fa-solid fa-circle-check absolute top-3 right-3 text-[#556B2F] opacity-0 transition-all check-icon text-lg"></i>
-                        </div>
-                    </label>
-
+                    
                      <label class="relative cursor-pointer group">
                         <input type="radio" name="payment_method" value="va" class="peer sr-only payment-radio">
                         <div class="p-4 rounded-xl border border-gray-200 hover:border-[#556B2F] transition-all flex items-center gap-4 group-hover:bg-[#f5f7ee]/50 bg-white h-full">
@@ -181,7 +156,7 @@
                     @foreach($carts as $cart)
                     <div class="flex gap-4 items-start pb-4 border-b border-dashed border-gray-100 last:border-0 last:pb-0">
                         <div class="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 shadow-sm">
-                             <img src="{{ asset($cart->menu->image) }}" alt="{{ $cart->menu->name }}" class="w-full h-full object-cover">
+                             <img src="{{ $cart->menu->image }}" alt="{{ $cart->menu->name }}" class="w-full h-full object-cover">
                         </div>
                         
                         <div class="flex-1 min-w-0">

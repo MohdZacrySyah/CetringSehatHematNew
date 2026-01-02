@@ -3,151 +3,125 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Menu; // <--- Tambahkan ini di paling atas
-use Illuminate\Support\Facades\Storage; // <--- Tambahkan ini untuk hapus gambar
-use App\Models\Order; // <--- JANGAN LUPA TAMBAHKAN INI
+use App\Models\Menu;
+use App\Models\Order;
 use App\Models\User;
 use App\Models\Review;
+use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
 {
-    public function index()
+   public function index()
 {
-    // Hitung data untuk dashboard
     $totalOrders = Order::count();
-    
-    // Hitung pendapatan (hanya yg statusnya paid/processing/completed)
-    $revenue = Order::whereIn('status', ['paid', 'processing', 'completed'])->sum('total_bayar');
-    
     $totalMenus = Menu::count();
+    $totalUsers = User::where('role', 'user')->count();
+    $recentOrders = Order::latest()->take(5)->get();
 
-    // Ambil 5 order terbaru
-    $recentOrders = Order::with('user')->latest()->take(5)->get();
+    // ADD THIS LINE: Calculate Revenue (Sum of 'total_bayar' where status is 'paid')
+    // Ensure you import the Order model if not already imported
+    $revenue = Order::where('status', 'paid')->sum('total_bayar'); 
 
-    return view('admin.dashboard', compact('totalOrders', 'revenue', 'totalMenus', 'recentOrders'));
+    return view('admin.dashboard', compact(
+        'totalOrders', 
+        'totalMenus', 
+        'totalUsers', 
+        'recentOrders',
+        'revenue' // <--- Pass the new variable here
+    ));
 }
-    // 1. Tampilkan Daftar Menu
+    // --- MANAJEMEN MENU ---
+
     public function menus()
     {
-        $menus = Menu::all();
+        $menus = Menu::latest()->get();
         return view('admin.menus.index', compact('menus'));
     }
 
-    // 2. Tampilkan Form Tambah Menu
     public function createMenu()
     {
         return view('admin.menus.create');
     }
-public function editMenu(Menu $menu)
-    {
-        return view('admin.menus.edit', compact('menu'));
-    }
 
-    // 9. Update Menu ke Database
-    public function updateMenu(Request $request, Menu $menu)
+    // 1. PERBAIKAN STORE MENU (TAMBAH)
+    public function storeMenu(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'required|string',
-            'price' => 'required|numeric',
-            'category' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            // Validasi kategori harus mencakup 'makanan_sehat'
+            'category' => 'required|in:makanan,minuman,snack,makanan_sehat,paket_hemat', 
+            // Validasi gambar max 5MB agar aman
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120', 
         ]);
 
-        $data = [
-            'name' => $request->name,
-            'description' => $request->description,
-            'price' => $request->price,
-            'category' => $request->category,
-        ];
+        $data = $request->all();
 
-        // Cek jika ada gambar baru yang diupload
         if ($request->hasFile('image')) {
-            // Hapus gambar lama jika ada
-            if ($menu->image) {
+            $imagePath = $request->file('image')->store('menus', 'public');
+            $data['image'] = $imagePath;
+        }
+
+        Menu::create($data);
+
+        return redirect()->route('admin.menus')->with('success', 'Menu berhasil ditambahkan!');
+    }
+
+    public function editMenu($id)
+    {
+        $menu = Menu::findOrFail($id);
+        return view('admin.menus.edit', compact('menu'));
+    }
+
+    // 2. PERBAIKAN UPDATE MENU (EDIT)
+    public function updateMenu(Request $request, $id)
+    {
+        $menu = Menu::findOrFail($id);
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            // Validasi kategori
+            'category' => 'required|in:makanan,minuman,snack,makanan_sehat,paket_hemat',
+            // Validasi gambar max 5MB
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+        ]);
+
+        $data = $request->except(['image']);
+
+        if ($request->hasFile('image')) {
+            // Hapus gambar lama
+            if ($menu->image && Storage::disk('public')->exists($menu->image)) {
                 Storage::disk('public')->delete($menu->image);
             }
-            // Simpan gambar baru
-            $data['image'] = $request->file('image')->store('menu_images', 'public');
+            
+            $path = $request->file('image')->store('menus', 'public');
+            $data['image'] = $path;
         }
 
         $menu->update($data);
 
         return redirect()->route('admin.menus')->with('success', 'Menu berhasil diperbarui!');
     }
-    // 3. Simpan Menu Baru ke Database
-    public function storeMenu(Request $request)
+
+    public function destroyMenu($id)
     {
-        // Validasi input
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'required|string',
-            'price' => 'required|numeric',
-            'category' => 'required|string', // Pastikan kolom ini ada di tabel menus Anda
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-        ]);
-
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('menu_images', 'public');
-        }
-
-        Menu::create([
-            'name' => $request->name,
-            'description' => $request->description,
-            'price' => $request->price,
-            'category' => $request->category,
-            'image' => $imagePath,
-        ]);
-
-        return redirect()->route('admin.menus')->with('success', 'Menu berhasil ditambahkan!');
-    }
-
-    // 4. Hapus Menu
-    public function destroyMenu(Menu $menu)
-    {
-        // Hapus gambar jika ada
-        if ($menu->image) {
+        $menu = Menu::findOrFail($id);
+        
+        if ($menu->image && Storage::disk('public')->exists($menu->image)) {
             Storage::disk('public')->delete($menu->image);
         }
-        
+
         $menu->delete();
-        return redirect()->back()->with('success', 'Menu berhasil dihapus!');
-    }
-    // --- TAMBAHKAN KODE INI DI BAGIAN BAWAH SEBELUM KURUNG KURAWAL TUTUP TERAKHIR ---
 
-    // 5. Tampilkan Daftar Pesanan Masuk
-    public function orders()
-    {
-        // Ambil data order, urutkan dari yang terbaru, dan sertakan data user-nya
-        $orders = Order::with('user')->latest()->get();
-        
-        return view('admin.orders.index', compact('orders'));
-    }
-    public function showOrder(Order $order)
-    {
-        // Ambil data order beserta item menu dan data user-nya
-        $order->load(['items.menu', 'user']);
-        return view('admin.orders.show', compact('order'));
+        return redirect()->route('admin.menus')->with('success', 'Menu berhasil dihapus!');
     }
 
-    // 7. Update Status Pesanan
-    public function updateOrderStatus(Request $request, Order $order)
+    public function reviews()
     {
-        $request->validate([
-            'status' => 'required|in:pending,paid,processing,completed,cancelled',
-        ]);
-
-        $order->update(['status' => $request->status]);
-
-        return redirect()->back()->with('success', 'Status pesanan berhasil diperbarui!');
-    }
-   public function reviews()
-    {
-        // Ambil data review, urutkan dari yang terbaru
-        $reviews = Review::with(['user', 'order'])->latest()->paginate(10);
-        
+        $reviews = Review::with('user', 'menu')->latest()->get();
         return view('admin.reviews.index', compact('reviews'));
     }
-
 }
