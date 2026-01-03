@@ -30,7 +30,9 @@ class Order extends Model
     ];
 
     protected $casts = [
-        'paid_at' => 'datetime',
+       'paid_at' => 'datetime',
+        'payment_due_at' => 'datetime',
+        'payment_response' => 'array', // Tambahkan ini agar dibaca sebagai Array
     ];
 
     // Relasi ke user

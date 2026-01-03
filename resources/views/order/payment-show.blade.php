@@ -112,66 +112,65 @@
 
 @push('scripts')
 @if($order->payment_method != 'cod')
+    {{-- Pastikan Client Key benar --}}
     <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}"></script>
     <script>
-        // 🔴 AMBIL SISA WAKTU DARI PHP (Server Side) 🔴
-        // Kita parsing angka integer dari PHP langsung ke variabel JS
+        // --- 1. COUNTDOWN TIMER ---
         let remainingSeconds = parseInt("{{ $sisaDetik }}");
 
         function updateTimer() {
-            // Jika waktu habis
             if (remainingSeconds <= 0) {
                 document.getElementById("countdown").innerHTML = "WAKTU HABIS";
                 document.getElementById("countdown").classList.add("text-gray-500");
-                
-                // Sembunyikan tombol bayar
                 const btnContainer = document.getElementById("payment-buttons");
                 if(btnContainer) btnContainer.style.display = "none";
-                
                 return;
             }
 
-            // Konversi detik ke Jam : Menit : Detik
             const hours = Math.floor(remainingSeconds / 3600);
             const minutes = Math.floor((remainingSeconds % 3600) / 60);
             const seconds = remainingSeconds % 60;
 
-            // Format 2 digit (01, 02, dst)
             const h = hours < 10 ? "0" + hours : hours;
             const m = minutes < 10 ? "0" + minutes : minutes;
             const s = seconds < 10 ? "0" + seconds : seconds;
 
-            // Tampilkan
             document.getElementById("countdown").innerHTML = h + " : " + m + " : " + s;
-
-            // Kurangi 1 detik
             remainingSeconds--;
         }
 
-        // Jalankan timer setiap 1 detik
         setInterval(updateTimer, 1000);
-        // Jalankan sekali di awal biar gak nunggu 1 detik baru muncul
         updateTimer();
 
-        // 🟢 LOGIC TOMBOL BAYAR 🟢
+        // --- 2. LOGIC TOMBOL BAYAR (BAGIAN KRUSIAL) ---
         const payButton = document.querySelector('#pay-button');
         if(payButton) {
             payButton.addEventListener('click', function(e) {
                 e.preventDefault();
+                console.log("Membuka Snap..."); // Debugging
+                
                 window.snap.pay('{{ $snapToken }}', {
                     onSuccess: function(result){
-                        window.location.href = "{{ route('order.success', $order->id) }}?payment_data=" + JSON.stringify(result);
+                        console.log("Sukses Midtrans:", result);
+                        
+                        // 🟢 FIX UTAMA: Enkripsi JSON agar tidak rusak di URL 🟢
+                        let paymentJson = JSON.stringify(result);
+                        let encodedJson = encodeURIComponent(paymentJson);
+
+                        // Redirect dengan data yang aman
+                        window.location.href = "{{ route('order.success', $order->id) }}?payment_data=" + encodedJson;
                     },
                     onPending: function(result){
                         alert("Menunggu pembayaran...");
                         location.reload();
                     },
                     onError: function(result){
+                        console.error("Midtrans Error:", result);
                         alert("Pembayaran gagal!");
                         location.reload();
                     },
                     onClose: function(){
-                        // User tutup popup, biarkan saja
+                        console.log("Popup ditutup user");
                     }
                 });
             });

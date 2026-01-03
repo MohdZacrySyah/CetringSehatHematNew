@@ -30,6 +30,7 @@
             </div>
 
             <div class="p-8">
+                {{-- Pastikan enctype ada untuk upload file --}}
                 <form action="{{ route('admin.menus.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                     @csrf
 
@@ -76,29 +77,33 @@
                             placeholder="Jelaskan bahan utama, rasa, atau detail lainnya..."></textarea>
                     </div>
 
+                    {{-- AREA UPLOAD GAMBAR YANG DIPERBAIKI --}}
                     <div class="space-y-2">
                         <label class="text-sm font-semibold text-gray-700">Foto Menu</label>
                         <div class="w-full">
-                            <label id="drop-area" class="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer hover:bg-gray-50 hover:border-[#556B2F] transition-all group relative overflow-hidden">
+                            {{-- PERUBAHAN: Menggunakan DIV bukan LABEL untuk area drop agar event handler lebih stabil --}}
+                            <div id="drop-area" class="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer hover:bg-gray-50 hover:border-[#556B2F] transition-all group relative overflow-hidden bg-white">
                                 
-                                <div id="upload-content" class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <div id="upload-content" class="flex flex-col items-center justify-center pt-5 pb-6 pointer-events-none">
                                     <div class="p-3 bg-gray-100 rounded-full mb-3 group-hover:bg-[#f5f7ee] transition-colors">
                                         <i class="fa-solid fa-cloud-arrow-up text-2xl text-gray-400 group-hover:text-[#556B2F]"></i>
                                     </div>
-                                    <p class="mb-1 text-sm text-gray-500"><span class="font-semibold text-[#556B2F]">Klik untuk upload</span> atau drag and drop</p>
+                                    <p class="mb-1 text-sm text-gray-500"><span class="font-semibold text-[#556B2F]">Klik untuk upload</span> </p>
                                     <p class="text-xs text-gray-400">PNG, JPG, JPEG (Max. 2MB)</p>
                                 </div>
 
-                                <div id="preview-container" class="absolute inset-0 w-full h-full bg-white hidden flex-col items-center justify-center">
+                                <div id="preview-container" class="absolute inset-0 w-full h-full bg-white hidden flex-col items-center justify-center pointer-events-none">
                                     <img id="image-preview" src="#" alt="Preview" class="h-32 object-contain mb-2 rounded-lg shadow-sm">
                                     <p class="text-xs text-green-600 font-semibold bg-green-50 px-2 py-1 rounded-full flex items-center gap-1">
                                         <i class="fa-solid fa-check-circle"></i> Foto Terpilih
                                     </p>
                                     <p class="text-[10px] text-gray-400 mt-1">Klik area ini untuk mengganti</p>
                                 </div>
+                            </div>
 
-                                <input id="file-input" type="file" name="image" class="hidden" accept="image/*" />
-                            </label>
+                            {{-- Input file diletakkan terpisah (hidden) --}}
+                            <input id="file-input" type="file" name="image" class="hidden" accept="image/png, image/jpeg, image/jpg" />
+                            <p id="error-message" class="text-red-500 text-xs mt-2 hidden"></p>
                         </div>
                     </div>
 
@@ -119,72 +124,116 @@
 
 </div>
 
+{{-- SCRIPT JAVASCRIPT FIX --}}
 <script>
-    const dropArea = document.getElementById('drop-area');
-    const fileInput = document.getElementById('file-input');
-    const uploadContent = document.getElementById('upload-content');
-    const previewContainer = document.getElementById('preview-container');
-    const imagePreview = document.getElementById('image-preview');
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('file-input');
+        const uploadContent = document.getElementById('upload-content');
+        const previewContainer = document.getElementById('preview-container');
+        const imagePreview = document.getElementById('image-preview');
+        const errorMessage = document.getElementById('error-message');
 
-    // 1. Mencegah aksi default browser (agar tidak membuka file di tab baru)
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropArea.addEventListener(eventName, preventDefaults, false);
-    });
+        // 1. Klik area drop -> Buka file explorer
+        dropArea.addEventListener('click', () => {
+            fileInput.click();
+        });
 
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
+        // 2. Mencegah default behavior untuk semua event drag di seluruh window
+        // Ini PENTING agar browser tidak membuka gambar di tab baru
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
 
-    // 2. Efek Visual saat file di-drag ke area (Highlight)
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropArea.addEventListener(eventName, () => {
-            dropArea.classList.add('bg-green-50', 'border-[#556B2F]');
-        }, false);
-    });
-
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropArea.addEventListener(eventName, () => {
-            dropArea.classList.remove('bg-green-50', 'border-[#556B2F]');
-        }, false);
-    });
-
-    // 3. Menangani File yang Di-drop
-    dropArea.addEventListener('drop', handleDrop, false);
-
-    function handleDrop(e) {
-        const dt = e.dataTransfer;
-        const files = dt.files;
-        
-        if (files.length > 0) {
-            fileInput.files = files; // Memasukkan file drop ke input form
-            handleFiles(files);      // Tampilkan preview
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
         }
-    }
 
-    // 4. Menangani File yang Dipilih lewat Klik
-    fileInput.addEventListener('change', function() {
-        handleFiles(this.files);
-    });
+        // 3. Efek Visual saat file di-drag
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => {
+                dropArea.classList.add('bg-green-50', 'border-[#556B2F]');
+            }, false);
+        });
 
-    // 5. Fungsi Menampilkan Preview Gambar
-    function handleFiles(files) {
-        if (files.length > 0) {
-            const file = files[0];
-            // Validasi apakah file adalah gambar
-            if (file.type.startsWith('image/')) {
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => {
+                dropArea.classList.remove('bg-green-50', 'border-[#556B2F]');
+            }, false);
+        });
+
+        // 4. Handle DROP Event (Bagian Kritis)
+        dropArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+
+            if (files.length > 0) {
+                // Gunakan DataTransfer untuk memindahkan file drop ke input form secara legal
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(files[0]);
+                
+                // Assign file ke input element
+                fileInput.files = dataTransfer.files;
+
+                // Tampilkan preview
+                handleFiles(files);
+            }
+        }
+
+        // 5. Handle Klik Manual (Change Event)
+        fileInput.addEventListener('change', function() {
+            handleFiles(this.files);
+        });
+
+        // 6. Fungsi Validasi & Preview
+        function handleFiles(files) {
+            // Reset error
+            errorMessage.classList.add('hidden');
+            errorMessage.innerText = '';
+
+            if (files.length > 0) {
+                const file = files[0];
+
+                // Validasi Tipe
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+                if (!validTypes.includes(file.type)) {
+                    showError("Format file tidak didukung. Harap upload JPG atau PNG.");
+                    fileInput.value = ''; // Reset input
+                    return;
+                }
+
+                // Validasi Ukuran (Max 2MB = 2 * 1024 * 1024)
+                // Error 419 sering terjadi karena file > post_max_size di PHP
+                if (file.size > 2 * 1024 * 1024) { 
+                    showError("Ukuran gambar terlalu besar! Maksimal 2MB.");
+                    fileInput.value = ''; // Reset input
+                    return;
+                }
+
+                // Tampilkan Preview
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     imagePreview.src = e.target.result;
-                    uploadContent.classList.add('hidden'); // Sembunyikan icon upload
-                    previewContainer.classList.remove('hidden'); // Munculkan preview
+                    uploadContent.classList.add('hidden');
+                    previewContainer.classList.remove('hidden');
                     previewContainer.classList.add('flex');
                 }
                 reader.readAsDataURL(file);
-            } else {
-                alert("Mohon upload file gambar.");
             }
         }
-    }
+
+        function showError(msg) {
+            errorMessage.innerText = msg;
+            errorMessage.classList.remove('hidden');
+            // Reset UI preview
+            uploadContent.classList.remove('hidden');
+            previewContainer.classList.add('hidden');
+            previewContainer.classList.remove('flex');
+        }
+    });
 </script>
 @endsection

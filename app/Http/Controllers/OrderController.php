@@ -200,23 +200,33 @@ class OrderController extends Controller
             abort(403);
         }
 
-        // AMBIL DATA DARI URL (Query String dari script Midtrans di frontend)
+        // AMBIL DATA DARI URL
         $paymentJson = $request->query('payment_data');
 
-        // Jika ada data pembayaran dari Midtrans, update!
+        // PERBAIKAN: Validasi JSON sebelum update
         if ($paymentJson) {
             $paymentData = json_decode($paymentJson, true);
             
-            $order->update([
-                'status' => 'paid',
-                'paid_at' => now(),
-                'payment_method' => $paymentData['payment_type'] ?? 'midtrans', // Update detail tipe spesifik (misal: bca_va)
-                'midtrans_transaction_id' => $paymentData['transaction_id'] ?? null,
-                'midtrans_order_id' => $paymentData['order_id'] ?? null,
-                'payment_response' => $paymentJson 
-            ]);
+            // Cek apakah JSON valid (tidak null)
+            if (json_last_error() === JSON_ERROR_NONE && is_array($paymentData)) {
+                $order->update([
+                    'status' => 'paid',
+                    'paid_at' => now(),
+                    // Ambil payment_type, jika tidak ada default ke 'midtrans'
+                    'payment_method' => $paymentData['payment_type'] ?? 'midtrans', 
+                    'midtrans_transaction_id' => $paymentData['transaction_id'] ?? null,
+                    'midtrans_order_id' => $paymentData['order_id'] ?? null,
+                    'payment_response' => $paymentJson // Simpan JSON string asli yang valid
+                ]);
+            } else {
+                // Jika JSON rusak, update status saja tanpa detail response yang bikin error
+                $order->update([
+                    'status' => 'paid',
+                    'paid_at' => now(),
+                    'payment_method' => 'midtrans_unknown'
+                ]);
+            }
         } 
-        // Jika COD, halaman ini hanya konfirmasi (status update dilakukan Admin nanti)
         
         return view('order.success', compact('order'));
     }
