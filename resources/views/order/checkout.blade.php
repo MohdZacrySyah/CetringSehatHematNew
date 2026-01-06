@@ -57,6 +57,11 @@
     <form action="{{ route('order.process') }}" method="POST" id="checkout-form" class="grid grid-cols-1 lg:grid-cols-12 gap-8" onsubmit="return handleFormSubmit()">
         @csrf
         
+        {{-- PENTING: Kirim kembali ID Cart yang akan diproses agar Controller tahu --}}
+        @foreach($carts as $cart)
+            <input type="hidden" name="cart_ids[]" value="{{ $cart->id }}">
+        @endforeach
+        
         <div class="lg:col-span-7 space-y-6">
             
             {{-- ALAMAT PENGIRIMAN --}}
@@ -169,7 +174,6 @@
                     <div class="flex gap-4 items-start pb-4 border-b border-dashed border-gray-100 last:border-0 last:pb-0">
                         <div class="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 shadow-sm">
                              @php
-                                // Menggunakan str_starts_with (PHP 8 native) agar lebih aman
                                 $imgSrc = 'https://via.placeholder.com/150?text=No+Image';
                                 if($cart->menu->image) {
                                     if(str_starts_with($cart->menu->image, 'http')) {

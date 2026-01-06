@@ -25,46 +25,71 @@ class OrderController extends Controller
 
     /**
      * 1. HALAMAN CHECKOUT (Input Alamat & Catatan)
+     * - Menerima input 'cart_ids' dari form keranjang
      */
-    public function checkoutPage()
+    public function checkoutPage(Request $request)
     {
         $user = Auth::user();
-        $carts = Cart::where('user_id', $user->id)->with('menu')->get();
+        
+        // Ambil ID Cart yang dipilih dari parameter URL (dikirim via GET dari keranjang)
+        $selectedCartIds = $request->input('cart_ids');
 
-        if ($carts->isEmpty()) {
-            return redirect()->route('cart')->with('error', 'Keranjang kosong!');
+        // Validasi: Jika tidak ada yang dipilih, kembalikan ke keranjang
+        if (empty($selectedCartIds)) {
+            return redirect()->route('cart')->with('error', 'Silakan pilih item yang ingin dibayar terlebih dahulu.');
         }
 
-        // Hitung total
+        // Ambil hanya cart yang dipilih DAN milik user ini
+        $carts = Cart::where('user_id', $user->id)
+                     ->whereIn('id', $selectedCartIds)
+                     ->with('menu')
+                     ->get();
+
+        if ($carts->isEmpty()) {
+            return redirect()->route('cart')->with('error', 'Item tidak ditemukan atau sudah dihapus.');
+        }
+
+        // Hitung total hanya dari item yang dipilih
         $subtotal = $carts->sum(fn($cart) => $cart->menu->price * $cart->quantity);
         $biayaPengiriman = 1000;
         $biayaAplikasi = 1000;
         $totalBayar = $subtotal + $biayaPengiriman + $biayaAplikasi;
 
+        // Kirim $carts (yang sudah difilter) ke view
         return view('order.checkout', compact('carts', 'subtotal', 'biayaPengiriman', 'biayaAplikasi', 'totalBayar', 'user'));
     }
 
     /**
      * 2. PROSES BUAT ORDER
+     * - Menyimpan order hanya untuk item yang ada di halaman checkout sebelumnya
      */
     public function processCheckout(Request $request)
     {
         $request->validate([
             'delivery_address' => 'required|string|max:500',
             'customer_notes' => 'nullable|string|max:255',
-            'payment_method' => 'required|in:qris,gopay,va,cod', // Validasi metode pembayaran
+            'payment_method' => 'required|in:qris,gopay,va,cod',
+            // Pastikan cart_ids dikirim lagi dari form checkout (hidden input)
+            'cart_ids' => 'required|array',
+            'cart_ids.*' => 'exists:carts,id', 
         ]);
 
         $user = Auth::user();
-        $carts = Cart::where('user_id', $user->id)->with('menu')->get();
+        $selectedCartIds = $request->input('cart_ids');
+
+        // Ambil data cart yang valid untuk diproses
+        $carts = Cart::where('user_id', $user->id)
+                     ->whereIn('id', $selectedCartIds)
+                     ->with('menu')
+                     ->get();
 
         if ($carts->isEmpty()) {
-            return redirect()->route('cart');
+            return redirect()->route('cart')->with('error', 'Gagal memproses pesanan. Item keranjang tidak valid.');
         }
 
         DB::beginTransaction();
         try {
-            // Hitung Ulang Total
+            // Hitung Ulang Total (Server Side Validation)
             $subtotal = $carts->sum(fn($c) => $c->menu->price * $c->quantity);
             $biayaPengiriman = 1000;
             $biayaAplikasi = 1000;
@@ -81,8 +106,8 @@ class OrderController extends Controller
                 'status' => 'pending',
                 'delivery_address' => $request->delivery_address,
                 'customer_notes' => $request->customer_notes,
-                'payment_method' => $request->payment_method, // Simpan metode pembayaran pilihan user
-                'payment_due_at' => Carbon::now()->addHours(24), // BATAS 24 JAM
+                'payment_method' => $request->payment_method,
+                'payment_due_at' => Carbon::now()->addHours(24),
             ]);
 
             // Pindahkan Item Keranjang ke OrderItems
@@ -98,12 +123,12 @@ class OrderController extends Controller
                 ]);
             }
 
-            // Kosongkan Keranjang
-            Cart::where('user_id', $user->id)->delete();
+            // HANYA Hapus Item yang Diproses dari Keranjang (Bukan delete all)
+            Cart::whereIn('id', $selectedCartIds)->delete();
 
             DB::commit();
 
-            // Redirect ke halaman pembayaran (showPayment)
+            // Redirect ke halaman pembayaran
             return redirect()->route('order.payment.show', $order->id);
 
         } catch (\Exception $e) {
@@ -113,9 +138,7 @@ class OrderController extends Controller
     }
 
     /**
-     * 3. TAMPILKAN HALAMAN BAYAR (LOGIC UPDATE)
-     * - Jika COD: Langsung tampilkan instruksi (bypass Midtrans)
-     * - Jika Online: Panggil Midtrans tapi BATASI metodenya sesuai pilihan user
+     * 3. TAMPILKAN HALAMAN BAYAR
      */
     public function showPayment($orderId)
     {
@@ -126,46 +149,40 @@ class OrderController extends Controller
             abort(403);
         }
 
-        // Cek Expired (Khusus Non-COD, karena COD bayar nanti)
+        // Cek Expired (Khusus Non-COD)
         if ($order->payment_method != 'cod' && $order->status == 'pending' && $order->payment_due_at && Carbon::now()->greaterThan($order->payment_due_at)) {
             $order->update(['status' => 'cancelled']);
             return redirect()->route('order.detail', $order->id)
                              ->with('error', 'Waktu pembayaran telah habis. Pesanan dibatalkan otomatis.');
         }
 
-        // --- SKENARIO 1: COD (BAYAR DI TEMPAT) ---
-        // Jika user pilih COD, kita tidak perlu memanggil Midtrans sama sekali.
+        // --- SKENARIO 1: COD ---
         if ($order->payment_method == 'cod') {
-            // Langsung tampilkan view (view akan menghandle tampilan khusus COD)
             return view('order.payment-show', compact('order'));
         }
 
         // --- SKENARIO 2: ONLINE PAYMENT (MIDTRANS) ---
-        // Jika status sudah bukan pending (misal sudah paid), langsung ke sukses
         if ($order->status != 'pending') {
             return redirect()->route('order.success', $order->id);
         }
 
         $this->initMidtrans();
 
-        // LOGIC KUNCI: Mapping Pilihan User ke 'enabled_payments' Midtrans
-        // Ini memaksa Midtrans hanya menampilkan metode yang dipilih user
+        // Mapping Pilihan User ke 'enabled_payments' Midtrans
         $enabledPayments = [];
         if ($order->payment_method == 'qris') {
             $enabledPayments = ['qris']; 
         } elseif ($order->payment_method == 'gopay') {
             $enabledPayments = ['gopay'];
         } elseif ($order->payment_method == 'va') {
-            // Izinkan semua Virtual Account populer
             $enabledPayments = ['bank_transfer', 'echannel', 'permata_va', 'bca_va', 'bni_va', 'bri_va', 'cimb_va'];
         } else {
-            // Fallback default jika metode tidak dikenali (opsional)
             $enabledPayments = ['qris', 'gopay', 'bank_transfer'];
         }
 
         $params = [
             'transaction_details' => [
-                'order_id' => $order->order_number, // Gunakan order_number agar unik
+                'order_id' => $order->order_number,
                 'gross_amount' => (int) $order->total_bayar,
             ],
             'customer_details' => [
@@ -176,7 +193,6 @@ class OrderController extends Controller
                     'address' => $order->delivery_address 
                 ]
             ],
-            // Masukkan parameter enabled_payments disini
             'enabled_payments' => $enabledPayments,
         ];
 
@@ -190,7 +206,7 @@ class OrderController extends Controller
     }
 
     /**
-     * 4. HALAMAN SUKSES (UPDATE STATUS DARI FRONTEND MIDTRANS)
+     * 4. HALAMAN SUKSES
      */
     public function success(Request $request, $id)
     {
@@ -200,26 +216,21 @@ class OrderController extends Controller
             abort(403);
         }
 
-        // AMBIL DATA DARI URL
         $paymentJson = $request->query('payment_data');
 
-        // PERBAIKAN: Validasi JSON sebelum update
         if ($paymentJson) {
             $paymentData = json_decode($paymentJson, true);
             
-            // Cek apakah JSON valid (tidak null)
             if (json_last_error() === JSON_ERROR_NONE && is_array($paymentData)) {
                 $order->update([
                     'status' => 'paid',
                     'paid_at' => now(),
-                    // Ambil payment_type, jika tidak ada default ke 'midtrans'
                     'payment_method' => $paymentData['payment_type'] ?? 'midtrans', 
                     'midtrans_transaction_id' => $paymentData['transaction_id'] ?? null,
                     'midtrans_order_id' => $paymentData['order_id'] ?? null,
-                    'payment_response' => $paymentJson // Simpan JSON string asli yang valid
+                    'payment_response' => $paymentJson 
                 ]);
             } else {
-                // Jika JSON rusak, update status saja tanpa detail response yang bikin error
                 $order->update([
                     'status' => 'paid',
                     'paid_at' => now(),
@@ -232,13 +243,12 @@ class OrderController extends Controller
     }
 
     /**
-     * 5. BATALKAN PESANAN (MANUAL OLEH USER)
+     * 5. BATALKAN PESANAN
      */
     public function cancelOrder($id)
     {
         $order = Order::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
 
-        // Hanya bisa batal jika status masih pending
         if ($order->status == 'pending') {
             $order->update(['status' => 'cancelled']);
             return redirect()->route('order.detail', $id)->with('success', 'Pesanan berhasil dibatalkan.');
@@ -262,7 +272,7 @@ class OrderController extends Controller
     }
 
     /**
-     * 7. CETAK STRUK (OPSIONAL)
+     * 7. CETAK STRUK
      */
     public function struktur()
     {

@@ -64,6 +64,8 @@
         opacity: 0;
         width: 0;
         height: 0;
+        position: absolute;
+        cursor: pointer;
     }
     .checkmark {
         position: absolute;
@@ -75,6 +77,7 @@
         border-width: 0 3px 3px 0;
         transform: rotate(45deg);
         display: none;
+        pointer-events: none;
     }
     .custom-checkbox input:checked ~ .checkmark {
         display: block;
@@ -197,10 +200,15 @@
 </div>
 
 <div class="cart-list-container">
-    {{-- MENAMPILKAN PESAN ERROR JIKA CHECKOUT GAGAL --}}
+    {{-- ALERT PESAN --}}
     @if(session('error'))
         <div style="background-color: #fee2e2; border: 1px solid #ef4444; color: #b91c1c; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;">
             {{ session('error') }}
+        </div>
+    @endif
+    @if(session('success'))
+        <div style="background-color: #ecfccb; border: 1px solid #84cc16; color: #3f6212; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;">
+            {{ session('success') }}
         </div>
     @endif
 
@@ -209,19 +217,38 @@
             Keranjang Anda masih kosong.
         </div>
     @else
+        {{-- LIST ITEM KERANJANG --}}
         @foreach($carts as $cart)
-        <div class="cart-item" data-price="{{ $cart->price }}">
+        <div class="cart-item" data-price="{{ $cart->menu->price }}" data-quantity="{{ $cart->quantity }}">
+            
+            {{-- CHECKBOX: Tidak dibungkus form, akan diproses JS --}}
             <label class="checkbox-container">
                 <div class="custom-checkbox">
-                    <input type="checkbox" onchange="calculateTotal()">
+                    <input type="checkbox" value="{{ $cart->id }}" onchange="calculateTotal()" class="cart-checkbox">
                     <span class="checkmark"></span>
                 </div>
             </label>
-            <img src="{{ asset($cart->image) }}" alt="{{ $cart->name }}"> <div class="item-details">
-                <h3>{{ $cart->name }}</h3>
-                <p>Rp {{ number_format($cart->price, 0, ',', '.') }}</p>
+            
+            {{-- Logic Gambar --}}
+            @php
+                $imgSrc = 'https://via.placeholder.com/150?text=No+Image';
+                if($cart->menu->image) {
+                    if(str_starts_with($cart->menu->image, 'http')) {
+                        $imgSrc = $cart->menu->image;
+                    } else {
+                        $imgSrc = asset('storage/' . $cart->menu->image);
+                    }
+                }
+            @endphp
+            <img src="{{ $imgSrc }}" alt="{{ $cart->menu->name }}"> 
+            
+            <div class="item-details">
+                <h3>{{ $cart->menu->name }}</h3>
+                <p>Rp {{ number_format($cart->menu->price, 0, ',', '.') }}</p>
             </div>
+
             <div class="quantity-area">
+                {{-- FORM UPDATE QUANTITY (Setiap item punya form sendiri) --}}
                 <form action="{{ route('cart.update', $cart->id) }}" method="POST" style="display:inline-flex;align-items:center;">
                     @csrf
                     @method('PUT')
@@ -231,70 +258,112 @@
                         <button type="submit" name="quantity" value="{{ $cart->quantity + 1 }}" class="quantity-btn">+</button>
                     </div>
                 </form>
+
+                {{-- FORM DELETE ITEM (Setiap item punya form sendiri) --}}
                 <form action="{{ route('cart.remove', $cart->id) }}" method="POST" style="margin-top:6px;">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="remove-btn"><i class="fa-solid fa-trash"></i></button>
+                    <button type="submit" class="remove-btn" onclick="return confirm('Hapus item ini?')">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
                 </form>
             </div>
         </div>
         @endforeach
-    @endif
 
-    <div class="total-summary">
-        <span>Total :</span>
-        <span id="total-price">Rp 0</span>
-    </div>
-    
-    <form action="{{ route('order.checkoutPage') }}" method="GET"> 
-    <button type="submit" class="checkout-button" id="checkoutBtn">
-        Lanjut ke Pembayaran
-    </button>
-</form>
+        {{-- TOTAL DAN TOMBOL CHECKOUT --}}
+        <div class="total-summary">
+            <span>Total :</span>
+            <span id="total-price">Rp 0</span>
+        </div>
+        
+        {{-- TOMBOL INI MEMANGGIL FUNGSI JS 'submitCheckout' --}}
+        <button type="button" class="checkout-button disabled" id="checkoutBtn" onclick="submitCheckout()">
+            Lanjut ke Pembayaran (<span id="countSelected">0</span>)
+        </button>
+    @endif
 </div>
+
+{{-- FORM RAHASIA UNTUK CHECKOUT --}}
+{{-- Form ini kosong, nanti akan diisi ID oleh Javascript saat tombol ditekan --}}
+<form id="realCheckoutForm" action="{{ route('order.checkoutPage') }}" method="GET" style="display:none;">
+    {{-- Input hidden akan disisipkan di sini oleh JS --}}
+</form>
+
 @endsection
 
 @push('scripts')
 <script>
     function calculateTotal() {
         let total = 0;
-        let hasChecked = false;
+        let count = 0;
         let items = document.querySelectorAll('.cart-item');
         
         items.forEach(item => {
-            let checkbox = item.querySelector('input[type="checkbox"]');
+            let checkbox = item.querySelector('.cart-checkbox');
             if (checkbox && checkbox.checked) {
-                hasChecked = true;
+                count++;
                 let price = parseFloat(item.dataset.price);
-                let qtyText = item.querySelector('.quantity-number');
-                let quantity = parseInt(qtyText ? qtyText.textContent : "1");
+                // Ambil quantity langsung dari attribute data-quantity agar akurat
+                // (Update: atau ambil dari teks jika ingin visual sync, tapi data-attr lebih aman jika tidak berubah realtime tanpa reload)
+                // Karena ini reload saat qty berubah, kita bisa ambil dari text
+                let qtyText = item.querySelector('.quantity-number').innerText;
+                let quantity = parseInt(qtyText);
+                
                 total += price * quantity;
             }
         });
         
-        let totalPriceEl = document.getElementById('total-price');
-        totalPriceEl.textContent = 'Rp ' + total.toLocaleString('id-ID');
+        // Update Tampilan Total
+        document.getElementById('total-price').innerText = 'Rp ' + total.toLocaleString('id-ID');
+        document.getElementById('countSelected').innerText = count;
         
+        // Atur Status Tombol Checkout
         let checkoutBtn = document.getElementById('checkoutBtn');
-        if (hasChecked && total > 0) {
+        if (count > 0) {
             checkoutBtn.classList.remove('disabled');
-            checkoutBtn.style.pointerEvents = 'auto';
             checkoutBtn.style.opacity = '1';
+            checkoutBtn.style.pointerEvents = 'auto';
         } else {
             checkoutBtn.classList.add('disabled');
-            checkoutBtn.style.pointerEvents = 'none';
             checkoutBtn.style.opacity = '0.5';
+            checkoutBtn.style.pointerEvents = 'none';
         }
+    }
+
+    // FUNGSI SUBMIT CHECKOUT
+    function submitCheckout() {
+        let form = document.getElementById('realCheckoutForm');
+        let checkboxes = document.querySelectorAll('.cart-checkbox:checked');
+        
+        // Bersihkan input lama (jika ada)
+        form.innerHTML = '';
+
+        if (checkboxes.length === 0) {
+            alert("Pilih minimal satu item untuk dibeli.");
+            return;
+        }
+
+        // Buat input hidden untuk setiap item yang dicentang
+        checkboxes.forEach(cb => {
+            let input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'cart_ids[]'; // Ini array ID yang dikirim ke controller
+            input.value = cb.value;
+            form.appendChild(input);
+        });
+
+        // Submit form rahasia
+        form.submit();
     }
     
     document.addEventListener('DOMContentLoaded', function() {
-        // OTOMATIS CENTANG SEMUA CHECKBOX SAAT HALAMAN DIBUKA
-        document.querySelectorAll('input[type="checkbox"]').forEach(function(cb){
+        // Otomatis centang semua saat load
+        document.querySelectorAll('.cart-checkbox').forEach(function(cb){
             cb.checked = true;
             cb.addEventListener('change', calculateTotal);
         });
         
-        // Hitung total langsung agar tombol "Beli Sekarang" menyala
         calculateTotal(); 
     });
 </script>
